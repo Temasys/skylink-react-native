@@ -8,10 +8,12 @@
   - Install the following:
      * Android:
 Install and update Android Studio: https://developer.android.com/studio/index.html
+
 React Native WebRTC Installation: https://github.com/react-native-webrtc/react-native-webrtc/blob/master/Documentation/AndroidInstallation.md
 
     * iOS:
 Install and update Xcode: https://developer.apple.com/xcode/
+
 React Native WebRTC Installation: https://github.com/react-native-webrtc/react-native-webrtc/blob/master/Documentation/iOSInstallation.md
 
 ### Installation
