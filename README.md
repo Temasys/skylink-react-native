@@ -3,16 +3,16 @@
 
 ### Pre-Requisites
 
-  - A Temasys Platform Console Account, App and an App Key ID  (Please refer to Steps 1 -4 here)
+  - A Temasys Platform Console Account, App and an App Key ID  (Please refer to Steps 1 -4 here: https://temasys.io/temasys-rtc-getting-started-web-sdk)
   - Install node.js (Min Version 10.x)
   - Install the following:
      * Android:
-Install and update Android Studio
+Install and update Android Studio: https://developer.android.com/studio/index.html
 React Native WebRTC Installation: https://github.com/react-native-webrtc/react-native-webrtc/blob/master/Documentation/AndroidInstallation.md
 
     * iOS:
-Install and update Xcode
-React Native WebRTC Installation (iOS): https://github.com/react-native-webrtc/react-native-webrtc/blob/master/Documentation/iOSInstallation.md
+Install and update Xcode: https://developer.apple.com/xcode/
+React Native WebRTC Installation: https://github.com/react-native-webrtc/react-native-webrtc/blob/master/Documentation/iOSInstallation.md
 
 ### Installation
 Import WebRTC methods from react-native-webRTC node module and pass those to the window object.
