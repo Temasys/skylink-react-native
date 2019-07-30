@@ -69,154 +69,174 @@ export default class App extends Component<Props> {
     };
   }
 
-  componentDidMount() {
-    const self = this;
+  export default class App extends Component<Props> {
+    constructor(props) {
+      super(props);
+      this.nextUrlId = 1;
+      this.state = {
+        isFrontCamera: true,
+        localStreamURL: null,
+        streamList: []
+      };
+    }
 
-    skylink.on(
-      "incomingStream",
-      (peerId, stream, isSelf, peerInfo, isScreensharing, streamId) => {
-        if (isSelf) {
-          return;
+    componentDidMount() {
+      const self = this;
+
+      skylink.on(
+        "incomingStream",
+        (peerId, stream, isSelf, peerInfo, isScreensharing, streamId) => {
+          if (isSelf) {
+            return;
+          }
+          const url = stream.toURL();
+          this.addUrl(url);
         }
-        const url = stream.toURL();
-        self.setState({
-          remoteStreamURL: url
-        });
-      }
-    );
+      );
 
-    skylink.on("peerLeft", peerID => {
-      this.setState({ remoteStreamURL: null });
-      this.setState({ localStreamURL: null });
-      console.log("this peer peerLeft");
-    });
+      skylink.on("peerLeft", peerID => {
+        this.setState({ localStreamURL: null });
+        this.setState({ streamList: [] });
+        console.log("this peer peerLeft");
+      });
 
-    skylink.on("peerJoined", (peerId, peerInfo, isSelf) => {
-      console.log("new peer has joined,", peerId, peerInfo, isSelf);
-    });
-  }
+      skylink.on("peerJoined", (peerId, peerInfo, isSelf) => {
+        console.log("new peer has joined,", peerId, peerInfo, isSelf);
+      });
+    }
 
-  render() {
-    return (
-      <View style={styles.container}>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[
-              styles.button,
-              !this.state.localStreamURL ? styles.join : styles.leave
-            ]}
-            onPress={
-              !this.state.localStreamURL ? this.joinRoom : this.leaveRoom
-            }
-          >
-            <Text style={styles.joinText}>
-              {!this.state.localStreamURL ? "Join Room" : "Leave Room"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.callerVideo}>
-          <View style={styles.videoWidget}>
+    addUrl(newStream) {
+      const streamList = this.state.streamList;
+      streamList.unshift({ streamUrl: newStream, id: this.nextUrlId });
+      this.nextUrlId++;
+      this.setState({ streamList: streamList });
+      console.log("updated stream links", this.state.streamList);
+    }
+
+    render() {
+      return (
+        <View style={styles.container}>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[
+                styles.button,
+                !this.state.localStreamURL ? styles.join : styles.leave
+              ]}
+              onPress={
+                !this.state.localStreamURL ? this.joinRoom : this.leaveRoom
+              }
+            >
+              <Text style={styles.joinText}>
+                {!this.state.localStreamURL ? "Join Room" : "Leave Room"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.videoWidgetLocal}>
             {this.state.localStreamURL && this.state.isFrontCamera && (
               <RTCView
                 streamURL={this.state.localStreamURL}
-                style={styles.rtcView}
+                style={styles.rtcViewLocal}
               />
             )}
           </View>
-          <View style={styles.videoWidget}>
-            {this.state.remoteStreamURL && (
-              <RTCView
-                streamURL={this.state.remoteStreamURL}
-                style={styles.rtcView}
-              />
-            )}
+          <View style={styles.videoWidgetRemote}>
+            {this.state.streamList.map((stream, index) => {
+              return (
+                <RTCView
+                  streamURL={stream.streamUrl}
+                  style={styles.rtcViewRemote}
+                  key={stream.id}
+                  id={stream.id}
+                />
+              );
+            })}
           </View>
         </View>
-      </View>
-    );
+      );
+    }
+
+    joinRoom = () => {
+      let self = this;
+      skylink.init(config, (error, success) => {
+        skylink.joinRoom({
+          audio: true,
+          video: true
+        });
+      });
+
+      skylink.on("mediaAccessSuccess", stream => {
+        console.log("mediaAccessSuccess");
+        const url = stream.toURL();
+        self.setState({
+          localStreamURL: url
+        });
+      });
+    };
+
+    leaveRoom = () => {
+      let self = this;
+      skylink.leaveRoom();
+    };
   }
 
-  joinRoom = () => {
-    let self = this;
-    skylink.init(config, (error, success) => {
-      skylink.joinRoom({
-        audio: true,
-        video: true
-      });
-    });
-
-    skylink.on("mediaAccessSuccess", stream => {
-      console.log("mediaAccessSuccess");
-      const url = stream.toURL();
-      self.setState({
-        localStreamURL: url
-      });
-    });
-  };
-
-  leaveRoom = () => {
-    let self = this;
-    skylink.leaveRoom();
-  };
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    backgroundColor: "#F5FCFF"
-  },
-  buttonContainer: {
-    width: "100%",
-    display: "flex",
-    flexDirection: "row",
-    flexWrap: "nowrap"
-  },
-  button: {
-    paddingRight: 30,
-    paddingLeft: 30,
-    paddingTop: 20,
-    paddingBottom: 20,
-    width: "100%",
-    alignItems: "center"
-  },
-  join: {
-    backgroundColor: "#03a8a1"
-  },
-  leave: {
-    backgroundColor: "#eb2326"
-  },
-  joinText: {
-    color: "white",
-    fontWeight: "bold"
-  },
-  leaveText: {
-    color: "#fff",
-    fontWeight: "bold"
-  },
-  instructions: {
-    textAlign: "center",
-    color: "#333333",
-    marginBottom: 5
-  },
-  callerVideo: {
-    flex: 1,
-    backgroundColor: "transparent",
-    alignItems: "center",
-    width: dimensions.width,
-    justifyContent: "center",
-    flexDirection: "column",
-    overflow: "scroll"
-  },
-  videoWidget: {
-    position: "relative",
-    flex: 1,
-    width: dimensions.width
-  },
-  rtcView: {
-    flex: 1,
-    width: dimensions.width,
-    backgroundColor: "#ccc",
-    position: "relative"
-  }
-});
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: "#F5FCFF",
+      flexDirection: "column"
+    },
+    buttonContainer: {
+      flexDirection: "row"
+    },
+    button: {
+      paddingTop: 15,
+      paddingBottom: 15,
+      width: "100%",
+      alignItems: "center"
+    },
+    join: {
+      backgroundColor: "#03a8a1"
+    },
+    leave: {
+      backgroundColor: "#eb2326"
+    },
+    joinText: {
+      color: "white",
+      fontWeight: "bold"
+    },
+    leaveText: {
+      color: "#fff",
+      fontWeight: "bold"
+    },
+    instructions: {
+      textAlign: "center",
+      color: "#333333",
+      marginBottom: 5
+    },
+    videoWidgetLocal: {
+      position: "relative",
+      flex: 1,
+      width: "100%",
+      flexDirection: "row",
+      justifyContent: "flex-start"
+    },
+    rtcViewLocal: {
+      flex: 1,
+      width: dimensions.width,
+      backgroundColor: "#ccc",
+      position: "relative"
+    },
+    videoWidgetRemote: {
+      position: "relative",
+      flex: 1,
+      width: "100%",
+      flexDirection: "row"
+    },
+    rtcViewRemote: {
+      flex: 1,
+      width: dimensions.width,
+      backgroundColor: "#ccc",
+      position: "relative",
+      flexDirection: "row"
+    }
+  });
