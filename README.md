@@ -3,8 +3,6 @@
 
 ### Pre-Requisites
 
-Dillinger is a cloud-enabled, mobile-ready, offline-storage, AngularJS powered HTML5 Markdown editor.
-
   - A Temasys Platform Console Account, App and an App Key ID  (Please refer to Steps 1 -4 here)
   - Install node.js (Min Version 10.x)
   - Install the following:
@@ -15,9 +13,6 @@ React Native WebRTC Installation: https://github.com/react-native-webrtc/react-n
     * iOS:
 Install and update Xcode
 React Native WebRTC Installation (iOS): https://github.com/react-native-webrtc/react-native-webrtc/blob/master/Documentation/iOSInstallation.md
-
-### API Documentation
-AVINASH WILL BE STRIPPING EXAMPLES FROM EXISTING 0.9.x DOCUMENTATION AND LINKING HERE
 
 ### Installation
 Import WebRTC methods from react-native-webRTC node module and pass those to the window object.
