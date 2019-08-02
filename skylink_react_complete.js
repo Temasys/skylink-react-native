@@ -9999,41 +9999,16 @@ import io from 'socket.io-client';
               }
             }
           }
-
-          // get the stream
-          // if (mediaOptions.manualGetUserMedia === true) {
-          //   self._trigger('mediaAccessRequired');
-          //
-          //   var current50Block = 0;
-          //   var mediaAccessRequiredFailure = false;
-          //   // wait for available audio or video stream
-          //   self._wait(function () {
-          //     if (mediaAccessRequiredFailure === true) {
-          //       self._onUserMediaError(new Error('Waiting for stream timeout'), false, false);
-          //     } else {
-          //       callback(null, self._streams.userMedia.stream);
-          //     }
-          //   }, function () {
-          //     current50Block += 1;
-          //     if (current50Block === 600) {
-          //       mediaAccessRequiredFailure = true;
-          //       return true;
-          //     }
-          //
-          //     if (self._streams.userMedia && self._streams.userMedia.stream) {
-          //       return true;
-          //     }
-          //   }, 50);
-          //   return;
-          // }
-
-          if (mediaOptions.audio || mediaOptions.video) {
-            self.getUserMedia({
-              // useExactConstraints: !!mediaOptions.useExactConstraints,
+          if(!mediaOptions.video.facingMode || mediaOptions.video.facingMode == 'undefined'){
+            mediaOptions.video.facingMode = 'user';
+          }
+          var getUserMediaOptions = {
               audio: mediaOptions.audio,
               video: mediaOptions.video
-
-            }, function (error, success) {
+            };
+          console.log("inside peer joining event ", getUserMediaOptions)
+          if (mediaOptions.audio || mediaOptions.video) {
+            self.getUserMedia(getUserMediaOptions, function (error, success) {
               if (error) {
                 callback(error, null);
               } else {
@@ -16165,6 +16140,9 @@ import io from 'socket.io-client';
     return false;
   };
 
+  Skylink.prototype.switchCamera = function() {
+    MediaStreamTrack._switchCamera();
+  };
 
   Skylink.prototype.getUserMedia = function(options,callback) {
     var self = this;
@@ -16200,29 +16178,14 @@ import io from 'socket.io-client';
       }
       return;
     }
-    console.log("i am running this getusermedia");
-    /*if (window.location.protocol !== 'https:' && AdapterJS.webrtcDetectedBrowser === 'chrome' &&
-    AdapterJS.webrtcDetectedVersion > 46) {
-    errorMsg = 'getUserMedia() has to be called in https:// application';
-    log.error(errorMsg, options);
-    if (typeof callback === 'function') {
-      callback(new Error(errorMsg), null);
+
+    if(options.video && !options.video.facingMode){
+      options.video = {};
+      options.video["facingMode"] = "user";
     }
-    return;
-  }*/
-    window.getUserMedia({
-      audio: true,
-      video: {
-        mandatory: {
-          minWidth: 640, // Provide your own width, height and frame rate here
-          minHeight: 480,
-          minFrameRate: 30
-        },
-        facingMode: "user"
-      }
-    })
+
+    window.getUserMedia(options)
       .then(stream => {
-        console.log("stream was successful ", stream, callback)
         if (typeof callback === 'function') {
           var mediaAccessSuccessFn = function (stream) {
             self.off('mediaAccessError', mediaAccessErrorFn);
@@ -16243,48 +16206,9 @@ import io from 'socket.io-client';
         }
         var settings = self._parseStreamSettings(options);
         console.log("this is setting", settings)
-        //self._trigger('mediaAccessSuccess', stream, false, false, stream.id);
-        //self._streams.userMedia["stream"] = stream;
-        //self._streams.userMedia["settings"] = settings["settings"];
         self._onStreamAccessSuccess(stream, settings, false, false);
       });
 
-    // self._throttle(function (runFn) {
-    //   if (!runFn) {
-    //     if (self._initOptions.throttlingShouldThrowError) {
-    //       var throttleLimitError = 'Unable to run as throttle interval has not reached (' + self._initOptions.throttleIntervals.getUserMedia + 'ms).';
-    //       log.error(throttleLimitError);
-    //
-    //       if (typeof callback === 'function') {
-    //         callback(new Error(throttleLimitError), null);
-    //       }
-    //     }
-    //     return;
-    //   }
-    //
-    //
-    //
-    //   // Parse stream settings
-    //   var settings = self._parseStreamSettings(options);
-    //
-    //   var onSuccessCbFn = function (stream) {
-    //     if (settings.mutedSettings.shouldAudioMuted) {
-    //       self._streamsMutedSettings.audioMuted = true;
-    //     }
-    //
-    //     if (settings.mutedSettings.shouldVideoMuted) {
-    //       self._streamsMutedSettings.videoMuted = true;
-    //     }
-    //
-    //     self._onStreamAccessSuccess(stream, settings, false, false);
-    //   };
-    //
-    //   var onErrorCbFn = function (error) {
-    //     self._onStreamAccessError(error, settings, false, false);
-    //   };
-    //
-    //
-    // }, 'getUserMedia', self._initOptions.throttleIntervals.getUserMedia);
   };
 
   /**
@@ -16493,12 +16417,12 @@ import io from 'socket.io-client';
 
     if (typeof options.getAudioTracks === 'function' || typeof options.getVideoTracks === 'function') {
       var checkActiveTracksFn = function (tracks) {
-        for (var t = 0; t < tracks.length; t++) {
-          if (!(tracks[t].ended || (typeof tracks[t].readyState === 'string' ?
-            tracks[t].readyState !== 'live' : false))) {
-            return true;
-          }
-        }
+        // for (var t = 0; t < tracks.length; t++) {
+        //   if (!(tracks[t].ended || (typeof tracks[t].readyState === 'string' ?
+        //     tracks[t].readyState !== 'live' : false))) {
+        //     return true;
+        //   }
+        // }
         return false;
       };
 
@@ -19598,47 +19522,11 @@ import io from 'socket.io-client';
    */
   Skylink.prototype._getSDPCommonSupports = function (targetMid, sessionDescription) {
     var self = this;
-    // var offer = {
-    //   audio: false,
-    //   video: false
-    // };
+
     var offer = {
       audio: true,
       video: true
     };
-
-    // if (!targetMid || !(sessionDescription && sessionDescription.sdp)) {
-    //   offer.video = !!(self._currentCodecSupport.video.h264 || self._currentCodecSupport.video.vp8);
-    //   offer.audio = !!self._currentCodecSupport.audio.opus;
-    //
-    //   if (targetMid) {
-    //     var peerAgent = ((self._peerInformations[targetMid] || {}).agent || {}).name || '';
-    //
-    //     if (AdapterJS.webrtcDetectedBrowser === peerAgent) {
-    //       offer.video = Object.keys(self._currentCodecSupport.video).length > 0;
-    //       offer.audio = Object.keys(self._currentCodecSupport.audio).length > 0;
-    //     }
-    //   }
-    //   return offer;
-    // }
-    //
-    // var remoteCodecs = self._getSDPCodecsSupport(targetMid, sessionDescription);
-    // var localCodecs = self._currentCodecSupport;
-    //
-    // for (var ac in localCodecs.audio) {
-    //   if (localCodecs.audio.hasOwnProperty(ac) && localCodecs.audio[ac] && remoteCodecs.audio[ac]) {
-    //     offer.audio = true;
-    //     break;
-    //   }
-    // }
-    //
-    // for (var vc in localCodecs.video) {
-    //   if (localCodecs.video.hasOwnProperty(vc) && localCodecs.video[vc] && remoteCodecs.video[vc]) {
-    //     offer.video = true;
-    //     break;
-    //   }
-    // }
-
     return offer;
   };
 
