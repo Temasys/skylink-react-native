@@ -7846,7 +7846,6 @@ import io from 'socket.io-client';
       self._onRemoteStreamAdded(self._hasMCU ? self._transceiverIdPeerIdMap[transceiverMid] : targetMid, stream, !!pc.hasScreen);
     };
     pc.onaddstream = function (evt) {
-      console.log("remote stream is added");
 
       if (!self._peerConnections[targetMid]) {
         return;
@@ -8353,9 +8352,9 @@ import io from 'socket.io-client';
 
         for (var y = 0; y < senders.length; y++) {
           var sender = senders[y];
-          if (sender.track && sender.track.id === trackIDToCompare) {
+          //if (sender.track && sender.track.id === trackIDToCompare) {
             sender.replaceTrack(trackToReplace);
-          }
+          //}
         }
       }
     }
@@ -9025,7 +9024,6 @@ import io from 'socket.io-client';
    */
   Skylink.prototype._getUserInfo = function(peerId) {
     var userInfo = clone(this.getPeerInfo());
-    console.log("this is the peer information ", this.getPeerInfo(), userInfo.settings);
     var userCustomInfoForPeer = peerId ? this._getPeerCustomSettings(peerId) : null;
 
     if (userCustomInfoForPeer && typeof userCustomInfoForPeer === 'object') {
@@ -9210,7 +9208,7 @@ import io from 'socket.io-client';
 
     var onSuccessCbFn = function(answer) {
       log.debug([targetMid, null, null, 'Created answer'], answer);
-      self._handleNegotiationStats('create_answer', targetMid, answer, false);
+      //self._handleNegotiationStats('create_answer', targetMid, answer, false);
 
       if (AdapterJS.webrtcDetectedBrowser === 'firefox') {
         self._setOriginalDTLSRole(answer, false);
@@ -9222,7 +9220,7 @@ import io from 'socket.io-client';
 
     var onErrorCbFn = function(error) {
       log.error([targetMid, null, null, 'Failed creating an answer:'], error);
-      self._handleNegotiationStats('error_create_answer', targetMid, null, false, error);
+      //self._handleNegotiationStats('error_create_answer', targetMid, null, false, error);
       self._trigger('handshakeProgress', self.HANDSHAKE_PROGRESS.ERROR, targetMid, error);
     };
 
@@ -9312,7 +9310,7 @@ import io from 'socket.io-client';
 
       pc.processingLocalSDP = false;
 
-      self._handleNegotiationStats('set_' + sessionDescription.type, targetMid, sessionDescription, false);
+      //self._handleNegotiationStats('set_' + sessionDescription.type, targetMid, sessionDescription, false);
       self._trigger('handshakeProgress', sessionDescription.type, targetMid);
 
       if (sessionDescription.type === self.HANDSHAKE_PROGRESS.ANSWER) {
@@ -9350,7 +9348,7 @@ import io from 'socket.io-client';
       }
 
       self._sendChannelMessage(messageToSend);
-      self._handleNegotiationStats(sessionDescription.type, targetMid, sessionDescription, false);
+      //self._handleNegotiationStats(sessionDescription.type, targetMid, sessionDescription, false);
     };
 
     var onErrorCbFn = function(error) {
@@ -9358,13 +9356,12 @@ import io from 'socket.io-client';
 
       pc.processingLocalSDP = false;
 
-      self._handleNegotiationStats('error_set_' + sessionDescription.type, targetMid, sessionDescription, false, error);
+      //self._handleNegotiationStats('error_set_' + sessionDescription.type, targetMid, sessionDescription, false, error);
       self._trigger('handshakeProgress', self.HANDSHAKE_PROGRESS.ERROR, targetMid, error);
     };
     //TODO:@avi:change in setLocalDescription
     pc.setLocalDescription(new window.RTCSessionDescription(sessionDescription)).then(() => {
       onSuccessCbFn();
-      console.log("a")
       // Send pc.localDescription to peer
     }).catch(error => {
       onErrorCbFn();
@@ -9999,41 +9996,15 @@ import io from 'socket.io-client';
               }
             }
           }
-
-          // get the stream
-          // if (mediaOptions.manualGetUserMedia === true) {
-          //   self._trigger('mediaAccessRequired');
-          //
-          //   var current50Block = 0;
-          //   var mediaAccessRequiredFailure = false;
-          //   // wait for available audio or video stream
-          //   self._wait(function () {
-          //     if (mediaAccessRequiredFailure === true) {
-          //       self._onUserMediaError(new Error('Waiting for stream timeout'), false, false);
-          //     } else {
-          //       callback(null, self._streams.userMedia.stream);
-          //     }
-          //   }, function () {
-          //     current50Block += 1;
-          //     if (current50Block === 600) {
-          //       mediaAccessRequiredFailure = true;
-          //       return true;
-          //     }
-          //
-          //     if (self._streams.userMedia && self._streams.userMedia.stream) {
-          //       return true;
-          //     }
-          //   }, 50);
-          //   return;
-          // }
-
-          if (mediaOptions.audio || mediaOptions.video) {
-            self.getUserMedia({
-              // useExactConstraints: !!mediaOptions.useExactConstraints,
+          if(!mediaOptions.video.facingMode || mediaOptions.video.facingMode == 'undefined'){
+            mediaOptions.video.facingMode = 'user';
+          }
+          var getUserMediaOptions = {
               audio: mediaOptions.audio,
               video: mediaOptions.video
-
-            }, function (error, success) {
+            };
+          if (mediaOptions.audio || mediaOptions.video) {
+            self.getUserMedia(getUserMediaOptions, function (error, success) {
               if (error) {
                 callback(error, null);
               } else {
@@ -10060,7 +10031,6 @@ import io from 'socket.io-client';
         onChannelOpen();
       }
     }, function() {
-      console.log("channel opened successfully");
       return self._readyState === self.READY_STATE_CHANGE.COMPLETED;
     });
   };
@@ -10769,7 +10739,6 @@ import io from 'socket.io-client';
         return true;
 
       } else if (state === self.READY_STATE_CHANGE.COMPLETED) {
-        console.log("this is console.log");
         log.info('Completed init() successfully ->', options);
 
         var success = clone(self._initOptions);
@@ -10836,12 +10805,10 @@ import io from 'socket.io-client';
    * @since 0.5.2
    */
   Skylink.prototype._requestServerInfo = function(method, url, callback, params) {
-    console.log("https:"+url);
     fetch("https:"+url)
       .then(function(response) {
         return response.json();
       }).then(function(responseJson) {
-      console.log(JSON.stringify(responseJson));
       return callback(responseJson);
 
 
@@ -11090,9 +11057,7 @@ import io from 'socket.io-client';
     self._readyState = self.READY_STATE_CHANGE.LOADING;
     self._trigger('readyStateChange', self.READY_STATE_CHANGE.LOADING, null, self._selectedRoom);
     //self._handleClientStats();
-    console.log("this is ready state change, avinash dubey");
     self._getCodecsSupport(function (error) {
-      console.log("this is error inside _getCodecsSupport", error);
       self._requestServerInfo('GET', self._path, function (response) {
         self._parseInfo(response);
       });
@@ -15026,7 +14991,6 @@ import io from 'socket.io-client';
     }
 
     self._sendChannelMessage(enterMsg);
-    console.log("this is enter message ", enterMsg);
     self._handleSessionStats(enterMsg);
   };
 
@@ -15651,7 +15615,6 @@ import io from 'socket.io-client';
 
     var onErrorCbFn = function(error) {
       pc.processingRemoteSDP = false;
-      console.log("error in setting offer");
 
       self._handleNegotiationStats('error_set_offer', targetMid, offer, true, error);
       self._trigger('handshakeProgress', self.HANDSHAKE_PROGRESS.ERROR, targetMid, error);
@@ -15855,13 +15818,13 @@ import io from 'socket.io-client';
     }
 
     // Added checks if there is a current remote sessionDescription being processing before processing this one
-    if (pc.processingRemoteSDP) {
-      log.warn([targetMid, 'RTCSessionDescription', 'answer',
-        'Dropping of setting local answer as there is another ' +
-        'sessionDescription being processed ->'], answer);
-      self._handleNegotiationStats('dropped_answer', targetMid, answer, true, 'Peer connection is currently processing an existing sdp');
-      return;
-    }
+    // if (pc.processingRemoteSDP) {
+    //   log.warn([targetMid, 'RTCSessionDescription', 'answer',
+    //     'Dropping of setting local answer as there is another ' +
+    //     'sessionDescription being processed ->'], answer);
+    //   self._handleNegotiationStats('dropped_answer', targetMid, answer, true, 'Peer connection is currently processing an existing sdp');
+    //   return;
+    // }
 
     pc.processingRemoteSDP = true;
 
@@ -16165,6 +16128,9 @@ import io from 'socket.io-client';
     return false;
   };
 
+  Skylink.prototype.switchCamera = function() {
+    MediaStreamTrack._switchCamera();
+  };
 
   Skylink.prototype.getUserMedia = function(options,callback) {
     var self = this;
@@ -16200,29 +16166,14 @@ import io from 'socket.io-client';
       }
       return;
     }
-    console.log("i am running this getusermedia");
-    /*if (window.location.protocol !== 'https:' && AdapterJS.webrtcDetectedBrowser === 'chrome' &&
-    AdapterJS.webrtcDetectedVersion > 46) {
-    errorMsg = 'getUserMedia() has to be called in https:// application';
-    log.error(errorMsg, options);
-    if (typeof callback === 'function') {
-      callback(new Error(errorMsg), null);
+
+    if(options.video && !options.video.facingMode){
+      options.video = {};
+      options.video["facingMode"] = "user";
     }
-    return;
-  }*/
-    window.getUserMedia({
-      audio: true,
-      video: {
-        mandatory: {
-          minWidth: 640, // Provide your own width, height and frame rate here
-          minHeight: 480,
-          minFrameRate: 30
-        },
-        facingMode: "user"
-      }
-    })
-      .then(stream => {
-        console.log("stream was successful ", stream, callback)
+
+    window.getUserMedia(options)
+        .then(stream => {
         if (typeof callback === 'function') {
           var mediaAccessSuccessFn = function (stream) {
             self.off('mediaAccessError', mediaAccessErrorFn);
@@ -16242,49 +16193,9 @@ import io from 'socket.io-client';
           });
         }
         var settings = self._parseStreamSettings(options);
-        console.log("this is setting", settings)
-        //self._trigger('mediaAccessSuccess', stream, false, false, stream.id);
-        //self._streams.userMedia["stream"] = stream;
-        //self._streams.userMedia["settings"] = settings["settings"];
         self._onStreamAccessSuccess(stream, settings, false, false);
       });
 
-    // self._throttle(function (runFn) {
-    //   if (!runFn) {
-    //     if (self._initOptions.throttlingShouldThrowError) {
-    //       var throttleLimitError = 'Unable to run as throttle interval has not reached (' + self._initOptions.throttleIntervals.getUserMedia + 'ms).';
-    //       log.error(throttleLimitError);
-    //
-    //       if (typeof callback === 'function') {
-    //         callback(new Error(throttleLimitError), null);
-    //       }
-    //     }
-    //     return;
-    //   }
-    //
-    //
-    //
-    //   // Parse stream settings
-    //   var settings = self._parseStreamSettings(options);
-    //
-    //   var onSuccessCbFn = function (stream) {
-    //     if (settings.mutedSettings.shouldAudioMuted) {
-    //       self._streamsMutedSettings.audioMuted = true;
-    //     }
-    //
-    //     if (settings.mutedSettings.shouldVideoMuted) {
-    //       self._streamsMutedSettings.videoMuted = true;
-    //     }
-    //
-    //     self._onStreamAccessSuccess(stream, settings, false, false);
-    //   };
-    //
-    //   var onErrorCbFn = function (error) {
-    //     self._onStreamAccessError(error, settings, false, false);
-    //   };
-    //
-    //
-    // }, 'getUserMedia', self._initOptions.throttleIntervals.getUserMedia);
   };
 
   /**
@@ -16395,63 +16306,29 @@ import io from 'socket.io-client';
   Skylink.prototype.sendStream = function(options, callback) {
     var self = this;
 
-    var renegotiate = function(newStream, cb) {
-      if (Object.keys(self._peerConnections).length > 0 || self._hasMCU) {
-        self._refreshPeerConnection(Object.keys(self._peerConnections), false, {}, function (err, success) {
-          if (err) {
-            log.error('Failed refreshing connections for sendStream() ->', err);
-            if (typeof cb === 'function') {
-              cb(new Error('Failed refreshing connections.'), null);
-            }
-            return;
-          }
-          if (typeof cb === 'function') {
-            cb(null, newStream);
-          }
-        });
-      } else if (typeof cb === 'function') {
-        cb(null, newStream);
-      }
-    }
-
-    var performReplaceTracks = function (originalStream, newStream, cb) {
-      if (!originalStream) {
-        renegotiate(newStream, cb);
-        return;
-      }
-      var newStreamHasVideoTrack = Array.isArray(newStream.getVideoTracks()) && newStream.getVideoTracks().length;
-      var newStreamHasAudioTrack = Array.isArray(newStream.getAudioTracks()) && newStream.getAudioTracks().length;
-      var originalStreamHasVideoTrack = Array.isArray(originalStream.getVideoTracks()) && originalStream.getVideoTracks().length;
-      var originalStreamHasAudioTrack = Array.isArray(originalStream.getAudioTracks()) && originalStream.getAudioTracks().length;
-
-      if ((newStreamHasVideoTrack && !originalStreamHasVideoTrack) || (newStreamHasAudioTrack && !originalStreamHasAudioTrack)) {
-        renegotiate(newStream, cb);
-        return;
-      }
-
-      if (newStreamHasVideoTrack && originalStreamHasVideoTrack) {
-        self._replaceTrack(originalStream.getVideoTracks()[0].id, newStream.getVideoTracks()[0]);
-      }
-
-      if (newStreamHasAudioTrack && originalStreamHasAudioTrack) {
-        self._replaceTrack(originalStream.getAudioTracks()[0].id, newStream.getAudioTracks()[0]);
-      }
-    };
-
-    var restartFn = function (originalStream, stream) {
+    var restartFn = function (stream) {
       if (self._inRoom) {
-
         if (!self._streams.screenshare) {
           self._trigger('incomingStream', self._user.sid, stream, true, self.getPeerInfo(), false, stream.id || stream.label);
           self._trigger('peerUpdated', self._user.sid, self.getPeerInfo(), true);
-        } else {
-          performReplaceTracks(originalStream, stream, callback);
         }
 
-        if (self._streams.userMedia) {
-          performReplaceTracks(originalStream, stream, callback);
+        if (Object.keys(self._peerConnections).length > 0 || self._hasMCU) {
+          self._refreshPeerConnection(Object.keys(self._peerConnections), false, {}, function (err, success) {
+            if (err) {
+              log.error('Failed refreshing connections for sendStream() ->', err);
+              if (typeof callback === 'function') {
+                callback(new Error('Failed refreshing connections.'), null);
+              }
+              return;
+            }
+            if (typeof callback === 'function') {
+              callback(null, stream);
+            }
+          });
+        } else if (typeof callback === 'function') {
+          callback(null, stream);
         }
-
       } else if (typeof callback === 'function') {
         callback(null, stream);
       }
@@ -16479,16 +16356,6 @@ import io from 'socket.io-client';
         callback(new Error(edgeNotSupportError),null);
       }
       return;
-    }
-
-    var origStream = null;
-
-    if (self._streams.userMedia) {
-      origStream = self._streams.userMedia.stream;
-    }
-
-    if (self._streams.screenshare) {
-      origStream = self._streams.screenshare.stream;
     }
 
     if (typeof options.getAudioTracks === 'function' || typeof options.getVideoTracks === 'function') {
@@ -16522,7 +16389,7 @@ import io from 'socket.io-client';
         }
       }, false, false);
 
-      restartFn(origStream, options);
+      restartFn(options);
 
     } else {
       self.getUserMedia(options, function (err, stream) {
@@ -16532,7 +16399,7 @@ import io from 'socket.io-client';
           }
           return;
         }
-        restartFn(origStream, stream);
+        restartFn(stream);
       });
     }
   };
@@ -18178,7 +18045,6 @@ import io from 'socket.io-client';
               }
             }
           };
-          console.log("we are in self._streams", self._streams, self);
           if (self._streams.screenshare && self._streams.screenshare.stream) {
             log.debug([peerId, 'MediaStream', null, 'Sending screen'], self._streams.screenshare.stream);
 
@@ -18979,9 +18845,7 @@ import io from 'socket.io-client';
         //     }
         //   }
         // } catch (e) {}
-        console.log("this is pc", pc, offerConstraints);
       pc.createOffer(offerConstraints).then(offer => {
-        console.log("this is offer by pc", offer);
         self._currentCodecSupport = self._getSDPCodecsSupport(null, offer);
         callback(null);
       });
@@ -19548,7 +19412,6 @@ import io from 'socket.io-client';
    * @since 0.6.18
    */
   Skylink.prototype._getSDPCodecsSupport = function (targetMid, sessionDescription) {
-    console.log("this is target mid and session description", targetMid, sessionDescription)
     var self = this;
     var codecs = {
       audio: {},
@@ -19598,47 +19461,11 @@ import io from 'socket.io-client';
    */
   Skylink.prototype._getSDPCommonSupports = function (targetMid, sessionDescription) {
     var self = this;
-    // var offer = {
-    //   audio: false,
-    //   video: false
-    // };
+
     var offer = {
       audio: true,
       video: true
     };
-
-    // if (!targetMid || !(sessionDescription && sessionDescription.sdp)) {
-    //   offer.video = !!(self._currentCodecSupport.video.h264 || self._currentCodecSupport.video.vp8);
-    //   offer.audio = !!self._currentCodecSupport.audio.opus;
-    //
-    //   if (targetMid) {
-    //     var peerAgent = ((self._peerInformations[targetMid] || {}).agent || {}).name || '';
-    //
-    //     if (AdapterJS.webrtcDetectedBrowser === peerAgent) {
-    //       offer.video = Object.keys(self._currentCodecSupport.video).length > 0;
-    //       offer.audio = Object.keys(self._currentCodecSupport.audio).length > 0;
-    //     }
-    //   }
-    //   return offer;
-    // }
-    //
-    // var remoteCodecs = self._getSDPCodecsSupport(targetMid, sessionDescription);
-    // var localCodecs = self._currentCodecSupport;
-    //
-    // for (var ac in localCodecs.audio) {
-    //   if (localCodecs.audio.hasOwnProperty(ac) && localCodecs.audio[ac] && remoteCodecs.audio[ac]) {
-    //     offer.audio = true;
-    //     break;
-    //   }
-    // }
-    //
-    // for (var vc in localCodecs.video) {
-    //   if (localCodecs.video.hasOwnProperty(vc) && localCodecs.video[vc] && remoteCodecs.video[vc]) {
-    //     offer.video = true;
-    //     break;
-    //   }
-    // }
-
     return offer;
   };
 
