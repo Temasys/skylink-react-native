@@ -176,6 +176,7 @@ export default class App extends Component<Props> {
     });
   };
   toggleView = () =>{
+    console.log("toggle view clicked");
     let self = this;
     if (self.state.isFrontCamera) {
       self.setState({
@@ -187,20 +188,25 @@ export default class App extends Component<Props> {
         isFrontCamera: true
       });
     }
-    skylink.getUserMedia(
-    {
+    let options =  {
       audio: true,
-        video: {
-      mandatory: {
-        minWidth: 640, // Provide your own width, height and frame rate here
+      video: {
+        mandatory: {
+          minWidth: 640, // Provide your own width, height and frame rate here
           minHeight: 480,
           minFrameRate: 30
-      },
-      facingMode: (self.state.isFrontCamera)?"environment":"user"
-    }
-    }, function(err, stream){
-      console.log("this is stream from getUserMedia", err, stream);
+        },
+        facingMode: (self.state.isFrontCamera) ? "environment" : "user"
+      }
+    };
+
+    window.getUserMedia(options)
+      .then(stream => {
         skylink.sendStream(stream, function (error, success) {
+          const url = stream.toURL();
+          self.setState({
+            localStreamURL: url
+          });
         if (err) return;
         if (stream === success) {
           console.info("Same MediaStream has been sent");
