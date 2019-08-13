@@ -14,11 +14,15 @@ import {
   StyleSheet,
   TouchableOpacity,
   Text,
-  View
+  View,
+  TextInput,
+  ScrollView,
+  Image
 } from "react-native";
 
 import CryptoJS from "crypto-js";
 import { Skylink } from "./skylink_react_complete";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
 const skylink = new Skylink();
 
@@ -67,104 +71,256 @@ export default class App extends Component<Props> {
   constructor(props) {
     super(props);
     this.nextUrlId = 1;
+    this.success = "";
     this.state = {
       isFrontCamera: true,
       localStreamURL: null,
-      streamList: []
+      streamList: [],
+      isChatOpen: null,
+      messageList: [],
+      text: "",
+      isVideoChat: false,
+      isRoomJoined: false,
+      hasError: false
     };
+  }
+
+  componentDidCatch(error, info) {
+    this.setState({ hasError: true });
   }
 
   componentDidMount() {
     const self = this;
 
-    skylink.on(
-      "incomingStream",
-      (peerId, stream, isSelf, peerInfo, isScreensharing, streamId) => {
-        if (isSelf) {
-          return;
+    try {
+      this.joinRoom();
+
+      skylink.on(
+        "incomingStream",
+        (peerId, stream, isSelf, peerInfo, isScreensharing, streamId) => {
+          if (isSelf) {
+            return;
+          }
+          const url = stream.toURL();
+          self.addUrl(url, peerId);
         }
-        const url = stream.toURL();
-        this.addUrl(url);
-      }
-    );
+      );
 
-    skylink.on("peerLeft", peerID => {
-      this.setState({ localStreamURL: null });
-      this.setState({ streamList: [] });
-      console.log("this peer peerLeft");
-    });
+      skylink.on("peerLeft", function(peerID) {
+        if (self.state.localStreamURL) {
+          let updatedStreamlist = self.state.streamList
+            .map(item => {
+              return item.peerID;
+            })
+            .indexOf(peerID);
+          self.state.streamList.splice(updatedStreamlist, 1);
+          self.setState({ streamList: self.state.streamList });
+        }
+        console.log("this peer peerLeft");
+      });
 
-    skylink.on("peerJoined", (peerId, peerInfo, isSelf) => {
-      console.log("new peer has joined,", peerId, peerInfo, isSelf);
-    });
+      skylink.on("peerJoined", (peerId, peerInfo, isSelf) => {
+        console.log("new peer has joined,", peerId, peerInfo, isSelf);
+      });
+
+      //User in the room (including us) sent a message
+      skylink.on("incomingMessage", function(
+        message,
+        peerId,
+        peerInfo,
+        isSelf
+      ) {
+        const Name = peerInfo.userData + (isSelf ? " (You)" : "");
+        self.addMessage(Name, message.content);
+      });
+    } catch (error) {
+      consol.log(error);
+      this.setState({ hasError: true });
+    }
   }
 
-  addUrl(newStream) {
+  addMessage(Name, message) {
+    this.state.messageList.push(
+      <Text style={styles.messageNode}>
+        {message.trim() + " "}
+        <Text style={styles.username}>{Name}</Text>
+      </Text>
+    );
+    this.setState({ messageList: this.state.messageList });
+  }
+
+  addUrl(newStream, peerID) {
     const streamList = this.state.streamList;
-    streamList.unshift({ streamUrl: newStream, id: this.nextUrlId });
+    streamList.unshift({
+      streamUrl: newStream,
+      id: this.nextUrlId,
+      peerID: peerID
+    });
     this.nextUrlId++;
     this.setState({ streamList: streamList });
-    console.log("updated stream links", this.state.streamList);
+    console.log("new stream list updated");
   }
 
   render() {
     return (
-      <View style={styles.container}>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[
-              styles.button,
-              !this.state.localStreamURL ? styles.join : styles.leave
-            ]}
-            onPress={
-              !this.state.localStreamURL ? this.joinRoom : this.leaveRoom
-            }
-          >
-            <Text style={styles.joinText}>
-              {!this.state.localStreamURL ? "Join Room" : "Leave Room"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-        {this.state.localStreamURL && (
-          <TouchableOpacity style={[styles.roundButton, styles.cameraChange]}
-            onPress={
-              this.toggleView
-            }
-          >
-            <Text style={styles.cameraColor}>Toggle View</Text>
-          </TouchableOpacity>
-        )}
-        <View style={styles.videoWidgetLocal}>
-          {this.state.localStreamURL && (
-            <RTCView
-              streamURL={this.state.localStreamURL}
-              style={styles.rtcViewLocal}
-            />
-          )}
-        </View>
-        <View style={styles.videoWidgetRemote}>
-          {this.state.streamList.map((stream, index) => {
-            return (
-              <RTCView
-                streamURL={stream.streamUrl}
-                style={styles.rtcViewRemote}
-                key={stream.id}
-                id={stream.id}
+      <View style={{ flex: 1 }}>
+        {!this.state.hasError && (
+          <View style={styles.container}>
+            <View style={styles.navBar}>
+              <Image
+                source={require("./images/temasys.png")}
+                style={{ width: 98, height: 36 }}
               />
-            );
-          })}
-        </View>
+              <View style={styles.rightNav}>
+                <TouchableOpacity
+                  onPress={
+                    this.state.isRoomJoined ? this.leaveRoom : this.joinRoom
+                  }
+                >
+                  <Icon
+                    style={styles.navItem}
+                    name={this.state.isRoomJoined ? "account-off" : "account"}
+                    size={22}
+                    color={"white"}
+                  />
+                </TouchableOpacity>
+                {this.state.isVideoChat && !this.state.isChatOpen && (
+                  <TouchableOpacity>
+                    <Icon
+                      style={styles.navItem}
+                      name="camera-party-mode"
+                      size={22}
+                      color={"white"}
+                      onPress={this.toggleView}
+                    />
+                  </TouchableOpacity>
+                )}
+                {this.state.isRoomJoined && (
+                  <TouchableOpacity
+                    onPress={
+                      !this.state.isChatOpen ? this.joinChat : this.leaveChat
+                    }
+                  >
+                    <Icon
+                      style={styles.navItem}
+                      name={
+                        !this.state.isChatOpen
+                          ? "message-text"
+                          : "message-outline"
+                      }
+                      size={22}
+                      color={"white"}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+
+            {this.state.isVideoChat && (
+              <View style={styles.videoWidgetLocal}>
+                {this.state.localStreamURL && !this.state.isChatOpen && (
+                  <RTCView
+                    streamURL={this.state.localStreamURL}
+                    style={styles.rtcViewLocal}
+                  />
+                )}
+              </View>
+            )}
+
+            {this.state.isVideoChat && (
+              <View style={styles.videoWidgetRemote}>
+                {this.state.streamList.map((stream, index) => {
+                  return (
+                    <RTCView
+                      streamURL={stream.streamUrl}
+                      style={styles.rtcViewRemote}
+                      key={stream.id}
+                      id={stream.id}
+                    />
+                  );
+                })}
+              </View>
+            )}
+
+            {/* CHAT WINDOW SCREEN */}
+            {this.state.isChatOpen && (
+              <ScrollView
+                ref="scrollView"
+                style={styles.chatWindow}
+                keyboardShouldPersistTaps="handled"
+                alwaysBounceVertical="true"
+                onContentSizeChange={(width, height) =>
+                  this.refs.scrollView.scrollTo({ y: height })
+                }
+                maintainVisibleContentPosition={{
+                  minIndexForVisible: 0,
+                  autoscrollToTopThreshold: 2
+                }}
+              >
+                <View style={styles.chatTextView}>
+                  {this.state.messageList.map(item => {
+                    return (
+                      <Text key={item} style={styles.messageNode}>
+                        {item}
+                      </Text>
+                    );
+                  })}
+                </View>
+              </ScrollView>
+            )}
+
+            {this.state.isChatOpen && (
+              <View style={styles.chatTextArea}>
+                <TextInput
+                  style={styles.inputBox}
+                  placeholder="Type here to chat!"
+                  onChangeText={text => this.setState({ text })}
+                  value={this.state.text}
+                />
+                <TouchableOpacity
+                  style={styles.enterBtn}
+                  onPress={this.enterText}
+                  disabled={!this.state.text}
+                >
+                  <Icon
+                    style={!this.state.text ? styles.disabled : ""}
+                    name="send"
+                    size={30}
+                    color={"#444"}
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
+        {this.state.hasError && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorMessage}>
+              Something is wrong please restart the application and try again.
+              :)
+            </Text>
+          </View>
+        )}
       </View>
     );
   }
 
   joinRoom = () => {
     let self = this;
+    this.state.isVideoChat = true;
     skylink.init(config, (error, success) => {
-      skylink.joinRoom({
-        audio: true,
-        video: true
-      });
+      self.success = success;
+      var displayName = "User_" + Math.floor(Math.random() * 1000 + 1);
+      skylink.joinRoom(
+        {
+          userData: displayName,
+          audio: true,
+          video: true
+        },
+        function() {
+          self.setState({ isRoomJoined: true });
+        }
+      );
     });
 
     skylink.on("mediaAccessSuccess", stream => {
@@ -175,7 +331,7 @@ export default class App extends Component<Props> {
       });
     });
   };
-  toggleView = () =>{
+  toggleView = () => {
     console.log("toggle view clicked");
     let self = this;
     if (self.state.isFrontCamera) {
@@ -188,7 +344,7 @@ export default class App extends Component<Props> {
         isFrontCamera: true
       });
     }
-    let options =  {
+    let options = {
       audio: true,
       video: {
         mandatory: {
@@ -196,17 +352,16 @@ export default class App extends Component<Props> {
           minHeight: 480,
           minFrameRate: 30
         },
-        facingMode: (self.state.isFrontCamera) ? "environment" : "user"
+        facingMode: self.state.isFrontCamera ? "environment" : "user"
       }
     };
 
-    window.getUserMedia(options)
-      .then(stream => {
-        skylink.sendStream(stream, function (error, success) {
-          const url = stream.toURL();
-          self.setState({
-            localStreamURL: url
-          });
+    window.getUserMedia(options).then(stream => {
+      skylink.sendStream(stream, function(error, success) {
+        const url = stream.toURL();
+        self.setState({
+          localStreamURL: url
+        });
         if (err) return;
         if (stream === success) {
           console.info("Same MediaStream has been sent");
@@ -214,63 +369,49 @@ export default class App extends Component<Props> {
         console.log("Stream is now being sent to Peers");
       });
     });
-  }
+  };
   leaveRoom = () => {
-    let self = this;
+    this.state.isVideoChat = false;
+    this.setState({ streamList: [] });
+    this.setState({ localStreamURL: null });
+    this.setState({ isChatOpen: false });
+    this.setState({ isRoomJoined: false });
     skylink.leaveRoom();
+  };
+
+  joinChat = () => {
+    this.setState({ isVideoChat: false });
+    let self = this;
+    this.setState({ messageList: [] });
+    this.setState({ text: "" });
+    console.log("Chat Joined");
+    this.setState({ isChatOpen: true });
+    self.state.messageList.push(
+      <Text style={[styles.joinNode, styles.bold]}>
+        {"Join Room " + self.success.selectedRoom}
+      </Text>
+    );
+    self.setState({ messageList: self.state.messageList });
+  };
+
+  leaveChat = () => {
+    console.log("Chat Left");
+    this.setState({ isVideoChat: true });
+    this.setState({ isChatOpen: false });
+    this.setState({ messageList: [] });
+  };
+
+  enterText = () => {
+    if (!this.state.isRoomJoined) return;
+    skylink.sendMessage(this.state.text);
+    this.setState({ text: "" });
   };
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5FCFF",
-    flexDirection: "column"
-  },
-  buttonContainer: {
-    flexDirection: "row"
-  },
-  button: {
-    paddingTop: 15,
-    paddingBottom: 15,
-    width: "100%",
-    alignItems: "center"
-  },
-  join: {
-    backgroundColor: "#03a8a1"
-  },
-  leave: {
-    backgroundColor: "#eb2326"
-  },
-  roundButton: {
-    paddingTop: 15,
-    paddingBottom: 15,
-    width: 55,
-    height: 55,
-    alignItems: "center",
-    borderRadius: 50,
-    position: "absolute",
-    right: 5,
-    top: 310,
-    zIndex: 2
-  },
-  cameraChange: {
-    backgroundColor: "rgba(52, 52, 52, 0.30)",
-    textAlign: "center"
-  },
-  cameraColor: {
-    color: "#fff",
-    fontSize: 11,
-    lineHeight: 14,
-    textAlign: "center"
-  },
-  joinText: {
-    color: "white",
-    fontWeight: "bold"
-  },
-  leaveText: {
-    color: "#fff",
-    fontWeight: "bold"
+    backgroundColor: "#F5FCFF"
   },
   instructions: {
     textAlign: "center",
@@ -302,5 +443,81 @@ const styles = StyleSheet.create({
     backgroundColor: "#ccc",
     position: "relative",
     flexDirection: "row"
+  },
+  chatWindow: {
+    flex: 1,
+    backgroundColor: "white"
+  },
+  chatTextView: {
+    flexDirection: "column"
+  },
+  chatTextArea: {
+    flexDirection: "row",
+    alignItems: "center",
+    elevation: 1,
+    paddingHorizontal: 10,
+    justifyContent: "space-between"
+  },
+  inputBox: {
+    width: "90%",
+    color: "#444"
+  },
+  messageNode: {
+    maxWidth: "100%",
+    color: "#444",
+    textAlign: "left",
+    fontSize: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 5
+  },
+  joinNode: {
+    maxWidth: "50%",
+    color: "#444",
+    fontSize: 15,
+    margin: "auto",
+    paddingHorizontal: 15,
+    paddingVertical: 5
+  },
+  navBar: {
+    height: 55,
+    backgroundColor: "#444",
+    elevation: 3,
+    paddingHorizontal: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  rightNav: {
+    flexDirection: "row"
+  },
+  navItem: {
+    marginLeft: 25
+  },
+  disabled: {
+    opacity: 0.5
+  },
+  bold: {
+    fontWeight: "bold"
+  },
+  textCenter: {
+    textAlign: "center"
+  },
+  smallTxt: {
+    fontSize: 9
+  },
+  username: {
+    fontSize: 10
+  },
+  errorContainer: {
+    backgroundColor: "red",
+    paddingHorizontal: 20,
+    height: dimensions.height,
+    alignItems: "center"
+  },
+  errorMessage: {
+    color: "white",
+    fontSize: 20,
+    marginTop: 150,
+    textAlign: "center"
   }
 });
