@@ -40,96 +40,6 @@ Skylink.prototype.sendBlobData = function(data, timeout, targetPeerId, sendChunk
  *   <code>percentage</code> property and <code>data</code>.</small>
  * @trigger <small>Event sequence follows <a href="#method_sendBlobData">
  * <code>sendBlobData()</code> method</a>.</small>
- * @example
- * &lt;body&gt;
- *  &lt;input type="radio" name="timeout" onchange="setTransferTimeout(0)"&gt; 1s timeout (Default)
- *  &lt;input type="radio" name="timeout" onchange="setTransferTimeout(120)"&gt; 2s timeout
- *  &lt;input type="radio" name="timeout" onchange="setTransferTimeout(300)"&gt; 5s timeout
- *  &lt;hr&gt;
- *  &lt;input type="file" onchange="showImage(this.files[0], this.getAttribute('data'))" data="peerId"&gt;
- *  &lt;input type="file" onchange="showImageGroup(this.files[0], this.getAttribute('data').split(',')))" data="peerIdA,peerIdB"&gt;
- *  &lt;input type="file" onchange="showImageAll(this.files[0])" data=""&gt;
- *  &lt;image id="target-1" src=""&gt;
- *  &lt;image id="target-2" src=""&gt;
- *  &lt;image id="target-3" src=""&gt;
- *  &lt;script&gt;
- *    var transferTimeout = 0;
- *
- *    function setTransferTimeout (timeout) {
- *      transferTimeout = timeout;
- *    }
- *
- *    function retrieveImageDataURL(file, cb) {
- *      var fr = new FileReader();
- *      fr.onload = function () {
- *        cb(fr.result);
- *      };
- *      fr.readAsDataURL(files[0]);
- *    }
- *
- *    // Example 1: Send image data URL to a Peer
- *    function showImage (file, peerId) {
- *      var cb = function (error, success) {
- *        if (error) return;
- *        console.info("Image has been transferred to '" + peerId + "' successfully");
- *      };
- *      retrieveImageDataURL(file, function (str) {
- *        if (transferTimeout > 0) {
- *          skylinkDemo.sendURLData(str, peerId, transferTimeout, cb);
- *        } else {
- *          skylinkDemo.sendURLData(str, peerId, cb);
- *        }
- *        document.getElementById("target-1").src = str;
- *      });
- *    }
- *
- *    // Example 2: Send image data URL to a list of Peers
- *    function showImageGroup (file, peerIds) {
- *      var cb = function (error, success) {
- *        var listOfPeers = error ? error.listOfPeers : success.listOfPeers;
- *        var listOfPeersErrors = error ? error.transferErrors : {};
- *        for (var i = 0; i < listOfPeers.length; i++) {
- *          if (listOfPeersErrors[listOfPeers[i]]) {
- *            console.error("Failed image transfer to '" + listOfPeers[i] + "'");
- *          } else {
- *            console.info("Image has been transferred to '" + listOfPeers[i] + "' successfully");
- *          }
- *        }
- *      };
- *      retrieveImageDataURL(file, function (str) {
- *        if (transferTimeout > 0) {
- *          skylinkDemo.sendURLData(str, peerIds, transferTimeout, cb);
- *        } else {
- *          skylinkDemo.sendURLData(str, peerIds, cb);
- *        }
- *        document.getElementById("target-2").src = str;
- *      });
- *    }
- *
- *    // Example 2: Send image data URL to a list of Peers
- *    function uploadFileAll (file) {
- *      var cb = function (error, success) {
- *        var listOfPeers = error ? error.listOfPeers : success.listOfPeers;
- *        var listOfPeersErrors = error ? error.transferErrors : {};
- *        for (var i = 0; i < listOfPeers.length; i++) {
- *          if (listOfPeersErrors[listOfPeers[i]]) {
- *            console.error("Failed image transfer to '" + listOfPeers[i] + "'");
- *          } else {
- *            console.info("Image has been transferred to '" + listOfPeers[i] + "' successfully");
- *          }
- *        }
- *      };
- *      retrieveImageDataURL(file, function (str) {
- *        if (transferTimeout > 0) {
- *          skylinkDemo.sendURLData(str, transferTimeout, cb);
- *        } else {
- *          skylinkDemo.sendURLData(str, cb);
- *        }
- *        document.getElementById("target-3").src = str;
- *      });
- *    }
- * &lt;/script&gt;
- * &lt;/body&gt;
  * @for Skylink
  * @since 0.6.1
  */
@@ -143,20 +53,6 @@ Skylink.prototype.sendURLData = function(data, timeout, targetPeerId, callback) 
  * @param {String} peerId The Peer ID.
  * @param {String} transferId The data transfer ID.
  * @param {Boolean} [accept=false] The flag if User accepts the upload data transfer request from Peer.
- * @example
- *   // Example 1: Accept Peer upload data transfer request
- *   skylinkDemo.on("incomingDataRequest", function (transferId, peerId, transferInfo, isSelf) {
- *      if (!isSelf) {
- *        skylinkDemo.acceptDataTransfer(peerId, transferId, true);
- *      }
- *   });
- *
- *   // Example 2: Reject Peer upload data transfer request
- *   skylinkDemo.on("incomingDataRequest", function (transferId, peerId, transferInfo, isSelf) {
- *      if (!isSelf) {
- *        skylinkDemo.acceptDataTransfer(peerId, transferId, false);
- *      }
- *   });
  * @trigger <small>Event sequence follows <a href="#method_sendBlobData">
  * <code>sendBlobData()</code> method</a> after <code>acceptDataTransfer()</code> method is invoked.</small>
  * @for Skylink
@@ -282,25 +178,6 @@ Skylink.prototype.respondBlobRequest =
  * @method cancelDataTransfer
  * @param {String} peerId The Peer ID.
  * @param {String} transferId The data transfer ID.
- * @example
- *   // Example 1: Cancel Peer data transfer
- *   var transferSessions = {};
- *
- *   skylinkDemo.on("dataTransferState", function (state, transferId, peerId) {
- *     if ([skylinkDemo.DATA_TRANSFER_STATE.DOWNLOAD_STARTED,
- *       skylinkDemo.DATA_TRANSFER_STATE.UPLOAD_STARTED].indexOf(state) > -1) {
- *       if (!Array.isArray(transferSessions[transferId])) {
- *         transferSessions[transferId] = [];
- *       }
- *       transferSessions[transferId].push(peerId);
- *     } else {
- *       transferSessions[transferId].splice(transferSessions[transferId].indexOf(peerId), 1);
- *     }
- *   });
- *
- *   function cancelTransfer (peerId, transferId) {
- *     skylinkDemo.cancelDataTransfer(peerId, transferId);
- *   }
  * @trigger <small>Event sequence follows <a href="#method_sendBlobData">
  * <code>sendBlobData()</code> method</a> after <code>cancelDataTransfer()</code> method is invoked.</small>
  * @for Skylink
@@ -422,41 +299,6 @@ Skylink.prototype.cancelBlobTransfer =
  *  <li><a href="#event_incomingMessage"><code>incomingMessage</code> event</a> triggers
  *  parameter payload <code>message.isDataChannel</code> value as <code>true</code> and
  *  <code>isSelf</code> value as <code>true</code>.</li></ol></li></ol>
- * @example
- *   // Example 1: Broadcasting to all Peers
- *   skylinkDemo.on("dataChannelState", function (state, peerId, error, channelName, channelType) {
- *      if (state === skylinkDemo.DATA_CHANNEL_STATE.OPEN &&
- *        channelType === skylinkDemo.DATA_CHANNEL_TYPE.MESSAGING) {
- *        skylinkDemo.sendP2PMessage("Hi all!");
- *      }
- *   });
- *
- *   // Example 2: Sending to specific Peers
- *   var peersInExclusiveParty = [];
- *
- *   skylinkDemo.on("peerJoined", function (peerId, peerInfo, isSelf) {
- *     if (isSelf) return;
- *     if (peerInfo.userData.exclusive) {
- *       peersInExclusiveParty[peerId] = false;
- *     }
- *   });
- *
- *   skylinkDemo.on("dataChannelState", function (state, peerId, error, channelName, channelType) {
- *      if (state === skylinkDemo.DATA_CHANNEL_STATE.OPEN &&
- *        channelType === skylinkDemo.DATA_CHANNEL_TYPE.MESSAGING) {
- *        peersInExclusiveParty[peerId] = true;
- *      }
- *   });
- *
- *   function updateExclusivePartyStatus (message) {
- *     var readyToSend = [];
- *     for (var p in peersInExclusiveParty) {
- *       if (peersInExclusiveParty.hasOwnProperty(p)) {
- *         readyToSend.push(p);
- *       }
- *     }
- *     skylinkDemo.sendP2PMessage(message, readyToSend);
- *   }
  * @for Skylink
  * @since 0.5.5
  */
@@ -619,41 +461,6 @@ Skylink.prototype.sendP2PMessage = function(message, targetPeerId) {
  *   triggers parameter payload <code>state</code> as <code>SENDING_STARTED</code>.</li>
  *   <li><em>For Peer only</em> <a href="#event_dataStreamState"><code>dataStreamState</code> event</a>
  *   triggers parameter payload <code>state</code> as <code>RECEIVING_STARTED</code>.</li></ol></li></ol>
- * @example
- *   // Example 1: Start streaming to all Peers
- *   skylinkDemo.on("dataChannelState", function (state, peerId, error, channelName, channelType) {
- *      if (state === skylinkDemo.DATA_CHANNEL_STATE.OPEN &&
- *        channelType === skylinkDemo.DATA_CHANNEL_TYPE.MESSAGING) {
- *        skylinkDemo.startStreamingData(false);
- *      }
- *   });
- *
- *   // Example 2: Start streaming to specific Peers
- *   var peersInExclusiveParty = [];
- *
- *   skylinkDemo.on("peerJoined", function (peerId, peerInfo, isSelf) {
- *     if (isSelf) return;
- *     if (peerInfo.userData.exclusive) {
- *       peersInExclusiveParty[peerId] = false;
- *     }
- *   });
- *
- *   skylinkDemo.on("dataChannelState", function (state, peerId, error, channelName, channelType) {
- *      if (state === skylinkDemo.DATA_CHANNEL_STATE.OPEN &&
- *        channelType === skylinkDemo.DATA_CHANNEL_TYPE.MESSAGING) {
- *        peersInExclusiveParty[peerId] = true;
- *      }
- *   });
- *
- *   function updateExclusivePartyStatus (message) {
- *     var readyToSend = [];
- *     for (var p in peersInExclusiveParty) {
- *       if (peersInExclusiveParty.hasOwnProperty(p)) {
- *         readyToSend.push(p);
- *       }
- *     }
- *     skylinkDemo.startStreamingData(message, readyToSend);
- *   }
  * @beta
  * @for Skylink
  * @since 0.6.18
@@ -969,45 +776,6 @@ Skylink.prototype.startStreamingData = function(isStringStream, targetPeerId) {
  *   triggers parameter payload <code>state</code> as <code>SENT</code>.</li>
  *   <li><em>For Peer only</em> <a href="#event_dataStreamState"><code>dataStreamState</code> event</a>
  *   triggers parameter payload <code>state</code> as <code>RECEIVED</code>.</li></ol></li></ol>
- * @example
- *   // Example 1: Start streaming
- *   var currentStreamId = null
- *   if (file.size > chunkLimit) {
- *     while ((file.size - 1) > endCount) {
- *       endCount = startCount + chunkLimit;
- *       chunks.push(file.slice(startCount, endCount));
- *       startCount += chunkLimit;
- *     }
- *     if ((file.size - (startCount + 1)) > 0) {
- *       chunks.push(file.slice(startCount, file.size - 1));
- *     }
- *   } else {
- *     chunks.push(file);
- *   }
- *   var processNextFn = function () {
- *     if (chunks.length > 0) {
- *       skylinkDemo.once("incomingDataStream", function () {
- *         setTimeout(processNextFn, 1);
- *       }, function (data, evtStreamId, evtPeerId, streamInfo, isSelf) {
- *         return isSelf && evtStreamId === currentStreamId;
- *       });
- *       var chunk = chunks[0];
- *       chunks.splice(0, 1);
- *       skylinkDemo.streamData(currentStreamId, chunk);
- *     } else {
- *       skylinkDemo.stopStreamingData(currentStreamId);
- *     }
- *   };
- *   skylinkDemo.once("incomingDataStreamStarted", processNextFn, function (streamId, peerId, streamInfo, isSelf) {
- *     currentStreamId = streamId;
- *     return isSelf;
- *   });
- *   skylinkDemo.once("incomingDataStreamStopped", function () {
- *     // Render file
- *   }, function (streamId, peerId, streamInfo, isSelf) {
- *     return currentStreamId === streamId && isSelf;
- *   });
- *   skylinkDemo.startStreamingData(false);
  * @beta
  * @for Skylink
  * @since 0.6.18
@@ -1160,8 +928,6 @@ Skylink.prototype.streamData = function(transferId, dataChunk) {
  *   triggers parameter payload <code>state</code> as <code>SENDING_STOPPED</code>.</li>
  *   <li><em>For Peer only</em> <a href="#event_dataStreamState"><code>dataStreamState</code> event</a>
  *   triggers parameter payload <code>state</code> as <code>RECEIVING_STOPPED</code>.</li></ol></li></ol>
- * @example
- *   skylinkDemo.stopStreamData(streamId);
  * @beta
  * @for Skylink
  * @since 0.6.18

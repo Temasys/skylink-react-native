@@ -192,12 +192,6 @@ var SkylinkLogs = {
    *   <li><code>2</code><var><b>{</b>String<b>}</b></var><p>The log message.</p></li>
    *   <li><code>3</code><var><b>{</b>Any<b>}</b></var><span class="label">Optional</span><p>The log message object.
    *   </p></li></ul></li></ul>
-   * @example
-   *  // Example 1: Get logs of specific level
-   *  var debugLogs = SkylinkLogs.getLogs(skylinkDemo.LOG_LEVEL.DEBUG);
-   *
-   *  // Example 2: Get all the logs
-   *  var allLogs = SkylinkLogs.getLogs();
    * @type Function
    * @global true
    * @triggerForPropHackNone true
@@ -210,9 +204,6 @@ var SkylinkLogs = {
    * Function that clears all the current stored SDK <code>console</code> logs.
    * @property SkylinkLogs.clearAllLogs
    * @type Function
-   * @example
-   *   // Example 1: Clear all the logs
-   *   SkylinkLogs.clearAllLogs();
    * @global true
    * @triggerForPropHackNone true
    * @for Skylink
@@ -225,9 +216,6 @@ var SkylinkLogs = {
    * <a href="https://developer.mozilla.org/en/docs/Web/API/console">Javascript Web Console</a>.
    * @property SkylinkLogs.printAllLogs
    * @type Function
-   * @example
-   *   // Example 1: Print all the logs
-   *   SkylinkLogs.printAllLogs();
    * @global true
    * @triggerForPropHackNone true
    * @for Skylink
@@ -381,21 +369,6 @@ var log = {
  * - When not provided or that the level does not exists, it will not overwrite the current log level.
  *   <small>By default, the initial log level is <code>ERROR</code>.</small>
  *   [Rel: Skylink.LOG_LEVEL]
- * @example
- *   // Example 1: Print all of the console.debug, console.log, console.info, console.warn and console.error logs.
- *   skylinkDemo.setLogLevel(skylinkDemo.LOG_LEVEL.DEBUG);
- *
- *   // Example 2: Print only the console.log, console.info, console.warn and console.error logs.
- *   skylinkDemo.setLogLevel(skylinkDemo.LOG_LEVEL.LOG);
- *
- *   // Example 3: Print only the console.info, console.warn and console.error logs.
- *   skylinkDemo.setLogLevel(skylinkDemo.LOG_LEVEL.INFO);
- *
- *   // Example 4: Print only the console.warn and console.error logs.
- *   skylinkDemo.setLogLevel(skylinkDemo.LOG_LEVEL.WARN);
- *
- *   // Example 5: Print only the console.error logs. This is done by default.
- *   skylinkDemo.setLogLevel(skylinkDemo.LOG_LEVEL.ERROR);
  * @for Skylink
  * @since 0.5.5
  */
@@ -425,15 +398,6 @@ Skylink.prototype.setLogLevel = function(logLevel) {
  * @param {Boolean} [options.storeLogs=false] The flag if SDK should store the <code>console</code> logs.
  *   <small>This is required to be enabled for <a href="#prop_SkylinkLogs"><code>SkylinkLogs</code> API</a>.</small>
  * @param {Boolean} [options.printTimestamp=false] The flag if SDK should print the timestamp of the <code>console</code> logs.
- * @example
- *   // Example 1: Enable both options.storeLogs and options.trace
- *   skylinkDemo.setDebugMode(true);
- *
- *   // Example 2: Enable only options.storeLogs
- *   skylinkDemo.setDebugMode({ storeLogs: true });
- *
- *   // Example 3: Disable debugging mode
- *   skylinkDemo.setDebugMode();
  * @for Skylink
  * @since 0.5.2
  */
