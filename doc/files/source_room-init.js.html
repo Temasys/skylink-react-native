@@ -435,38 +435,6 @@ Skylink.prototype.generateUUID = function() {
  * @param {JSON|String} callback.success.socketServer The configured value of the &lt;code&gt;options.socketServer&lt;/code&gt;.
  * @param {Boolean} callback.success.useEdgeWebRTC The configured value of the &lt;code&gt;options.useEdgeWebRTC&lt;/code&gt;.
  * @param {Boolean} callback.success.enableSimultaneousTransfers The configured value of the &lt;code&gt;options.enableSimultaneousTransfers&lt;/code&gt;.
- * @example
- *   // Example 1: Using CORS authentication and connection to default Room
- *   skylinkDemo(appKey, function (error, success) {
- *     if (error) return;
- *     skylinkDemo.joinRoom(); // Goes to default Room
- *   });
- *
- *   // Example 2: Using CORS authentication and connection to a different Room
- *   skylinkDemo(appKey, function (error, success) {
- *     skylinkDemo.joinRoom(&quot;testxx&quot;); // Goes to &quot;testxx&quot; Room
- *   });
- *
- *   // Example 3: Using credentials authentication and connection to only default Room
- *   var defaultRoom   = &quot;test&quot;,
- *       startDateTime = (new Date()).toISOString(),
- *       duration      = 1, // Allows only User session to stay for 1 hour
- *       appKeySecret  = &quot;xxxxxxx&quot;,
- *       hash          = CryptoJS.HmacSHA1(defaultRoom + &quot;\_&quot; + duration + &quot;\_&quot; + startDateTime, appKeySecret);
- *       credentials   = encodeURIComponent(hash.toString(CryptoJS.enc.Base64));
- *
- *   skylinkDemo({
- *     defaultRoom: defaultRoom,
- *     appKey: appKey,
- *     credentials: {
- *       duration: duration,
- *       startDateTime: startDateTime,
- *       credentials: credentials
- *     }
- *   }, function (error, success) {
- *     if (error) return;
- *     skylinkDemo.joinRoom(); // Goes to default Room (switching to different Room is not allowed for credentials authentication)
- *   });
  * @trigger &lt;ol class=&quot;desc-seq&quot;&gt;
  *   &lt;li&gt;If parameter &lt;code&gt;options&lt;/code&gt; is not provided: &lt;ol&gt;&lt;li&gt;&lt;b&gt;ABORT&lt;/b&gt; and return error.&lt;/li&gt;&lt;/ol&gt;&lt;/li&gt;
  *   &lt;li&gt;Checks if dependecies and browser APIs are available. &lt;ol&gt;&lt;li&gt;If AdapterJS is not loaded: &lt;ol&gt;

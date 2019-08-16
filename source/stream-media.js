@@ -99,40 +99,6 @@ Skylink.prototype.getUserMedia = function(options,callback) {
  *   <small>Defined as <code>null</code> when there are errors in request</small>
  *   <small>Object signature is the <a href="#method_getUserMedia"><code>getUserMedia()</code> method</a>
  *   Stream object.</small>
- * @example
- *   // Example 1: Send MediaStream object before being connected to Room
- *   function retrieveStreamBySourceForFirefox (sourceId) {
- *     navigator.mediaDevices.getUserMedia({
- *       audio: true,
- *       video: {
- *         sourceId: { exact: sourceId }
- *       }
- *     }).then(function (stream) {
- *       skylinkDemo.sendStream(stream, function (error, success) {
- *         if (err) return;
- *         if (stream === success) {
- *           console.info("Same MediaStream has been sent");
- *         }
- *         console.log("Stream is now being sent to Peers");
- *         attachMediaStream(document.getElementById("my-video"), success);
- *       });
- *     });
- *   }
- *
- *   // Example 2: Send video after being connected to Room
- *   function sendVideo () {
- *     skylinkDemo.joinRoom(function (jRError, jRSuccess) {
- *       if (jRError) return;
- *       skylinkDemo.sendStream({
- *         audio: true,
- *         video: true
- *       }, function (error, success) {
- *         if (error) return;
- *         console.log("getUserMedia() Stream with video is now being sent to Peers");
- *         attachMediaStream(document.getElementById("my-video"), success);
- *       });
- *     });
- *   }
  * @trigger <ol class="desc-seq">
  *   <li>Checks <code>options</code> provided. <ol><li>If provided parameter <code>options</code> is not valid: <ol>
  *   <li><b>ABORT</b> and return error.</li></ol></li>
@@ -282,22 +248,6 @@ Skylink.prototype.sendStream = function(options, callback) {
  * </blockquote>
  * Function that stops <a href="#method_getUserMedia"><code>getUserMedia()</code> Stream</a>.
  * @method stopStream
- * @example
- *   function stopStream () {
- *     skylinkDemo.stopStream();
- *   }
- *
- *   skylinkDemo.getUserMedia();
- * @trigger <ol class="desc-seq">
- *   <li>Checks if there is <a href="#method_getUserMedia"><code>getUserMedia()</code> Stream</a>. <ol>
- *   <li>If there is <a href="#method_getUserMedia"><code>getUserMedia()</code> Stream</a>: <ol>
- *   <li>Stop <a href="#method_getUserMedia"><code>getUserMedia()</code> Stream</a> Stream. <ol>
- *   <li><a href="#event_mediaAccessStopped"><code>mediaAccessStopped</code> event</a> triggers
- *   parameter payload <code>isScreensharing</code> value as <code>false</code>.</li><li>If User is in Room: <ol>
- *   <li><a href="#event_streamEnded"><code>streamEnded</code> event</a> triggers parameter
- *   payload <code>isSelf</code> value as <code>true</code> and <code>isScreensharing</code> value as<code>false</code>
- *   .</li><li><a href="#event_peerUpdated"><code>peerUpdated</code> event</a> triggers parameter payload
- *   <code>isSelf</code> value as <code>true</code>.</li></ol></li></ol></li></ol></li></ol></li></ol>
  * @for Skylink
  * @since 0.5.6
  */
@@ -327,24 +277,6 @@ Skylink.prototype.stopStream = function () {
  *   tracks should be muted or not.
  * @param {Boolean} [options.videoMuted=true] The flag if all Strea.ms video
  *   tracks should be muted or not.
- * @example
- *   // Example 1: Mute both audio and video tracks in all Streams
- *   skylinkDemo.muteStream({
- *     audioMuted: true,
- *     videoMuted: true
- *   });
- *
- *   // Example 2: Mute only audio tracks in all Streams
- *   skylinkDemo.muteStream({
- *     audioMuted: true,
- *     videoMuted: false
- *   });
- *
- *   // Example 3: Mute only video tracks in all Streams
- *   skylinkDemo.muteStream({
- *     audioMuted: false,
- *     videoMuted: true
- *   });
  * @trigger <ol class="desc-seq">
  *   <li>If provided parameter <code>options</code> is invalid: <ol><li><b>ABORT</b> and return error.</li></ol></li>
  *   <li>Checks if there is any available Streams: <ol><li>If there is no available Streams: <ol>
@@ -455,10 +387,6 @@ Skylink.prototype.muteStream = function(options) {
  * <a href="#method_shareScreen"><code>shareScreen()</code> Stream</a> audio tracks.
  * @method enableAudio
  * @deprecated true
- * @example
- *   function unmuteAudio () {
- *     skylinkDemo.enableAudio();
- *   }
  * @trigger <ol class="desc-seq">
  *   <li>Invokes <a href="#method_muteStream"><code>muteStream()</code> method</a> with
  *   <code>options.audioMuted</code> value as <code>false</code> and
@@ -482,10 +410,6 @@ Skylink.prototype.enableAudio = function() {
  * <a href="#method_shareScreen"><code>shareScreen()</code> Stream</a> audio tracks.
  * @method disableAudio
  * @deprecated true
- * @example
- *   function muteAudio () {
- *     skylinkDemo.disableAudio();
- *   }
  * @trigger <ol class="desc-seq">
  *   <li>Invokes <a href="#method_muteStream"><code>muteStream()</code> method</a> with
  *   <code>options.audioMuted</code> value as <code>true</code> and
@@ -509,15 +433,6 @@ Skylink.prototype.disableAudio = function() {
  * <a href="#method_shareScreen"><code>shareScreen()</code> Stream</a> video tracks.
  * @method enableVideo
  * @deprecated true
- * @example
- *   function unmuteVideo () {
- *     skylinkDemo.enableVideo();
- *   }
- * @trigger <ol class="desc-seq">
- *   <li>Invokes <a href="#method_muteStream"><code>muteStream()</code> method</a> with
- *   <code>options.videoMuted</code> value as <code>false</code> and
- *   <code>options.audioMuted</code> value with current <code>peerInfo.mediaStatus.audioMuted</code> value.
- *   <small>See <a href="#method_getPeerInfo"><code>getPeerInfo()</code> method</a> for more information.</small></li></ol>
  * @for Skylink
  * @since 0.5.5
  */
@@ -536,15 +451,6 @@ Skylink.prototype.enableVideo = function() {
  * <a href="#method_shareScreen"><code>shareScreen()</code> Stream</a> video tracks.
  * @method disableVideo
  * @deprecated true
- * @example
- *   function muteVideo () {
- *     skylinkDemo.disableVideo();
- *   }
- * @trigger <ol class="desc-seq">
- *   <li>Invokes <a href="#method_muteStream"><code>muteStream()</code> method</a> with
- *   <code>options.videoMuted</code> value as <code>true</code> and
- *   <code>options.audioMuted</code> value with current <code>peerInfo.mediaStatus.audioMuted</code> value.
- *   <small>See <a href="#method_getPeerInfo"><code>getPeerInfo()</code> method</a> for more information.</small></li></ol>
  * @for Skylink
  * @since 0.5.5
  */
@@ -632,42 +538,6 @@ Skylink.prototype.disableVideo = function() {
  * @param {MediaStream} callback.success The success result in request.
  *   <small>Defined as <code>null</code> when there are errors in request</small>
  *   <small>Object signature is the screensharing Stream object.</small>
- * @example
- *   // Example 1: Share screen with audio
- *   skylinkDemo.shareScreen(true, function (error, success) {
- *     if (error) return;
- *     attachMediaStream(document.getElementById("my-screen"), success);
- *   });
- *
- *   // Example 2: Share screen without audio
- *   skylinkDemo.shareScreen(false, function (error, success) {
- *     if (error) return;
- *     attachMediaStream(document.getElementById("my-screen"), success);
- *   });
- *
- *   // Example 3: Share "window" media source
- *   skylinkDemo.shareScreen("window", function (error, success) {
- *     if (error) return;
- *     attachMediaStream(document.getElementById("my-screen"), success);
- *   });
- *
- *   // Example 4: Share tab and its audio media source
- *   skylinkDemo.shareScreen(true, ["tab", "audio"], function (error, success) {
- *     if (error) return;
- *     attachMediaStream(document.getElementById("my-screen"), success);
- *   });
- *
- *   // Example 5: Share "window" and "screen" media source
- *   skylinkDemo.shareScreen(["window", "screen"], function (error, success) {
- *     if (error) return;
- *     attachMediaStream(document.getElementById("my-screen"), success);
- *   });
- *
- *   // Example 6: Share "window" with specific media source for specific plugin build users.
- *   skylinkDemo.shareScreen({ mediaSource: "window", sourceId: "xxxxx" }, function (error, success) {
- *     if (error) return;
- *     attachMediaStream(document.getElementById("my-screen"), success);
- *   });
  * @trigger <ol class="desc-seq">
  *   <li>Retrieves screensharing Stream. <ol><li>If retrieval was successful: <ol><li>If browser is Firefox: <ol>
  *   <li>If there are missing audio or video tracks requested: <ol>
@@ -1001,12 +871,6 @@ Skylink.prototype.shareScreen = function (enableAudio, mediaSource, callback) {
  * </blockquote>
  * Function that stops <a href="#method_shareScreen"><code>shareScreen()</code> Stream</a>.
  * @method stopScreen
- * @example
- *   function stopScreen () {
- *     skylinkDemo.stopScreen();
- *   }
- *
- *   skylinkDemo.shareScreen();
  * @trigger <ol class="desc-seq">
  *   <li>Checks if there is <a href="#method_shareScreen"><code>shareScreen()</code> Stream</a>. <ol>
  *   <li>If there is <a href="#method_shareScreen"><code>shareScreen()</code> Stream</a>: <ol>
@@ -1078,22 +942,6 @@ Skylink.prototype.stopScreen = function () {
  * @param {Array} callback.success.video.input The list of video input (camera) sources.
  * @param {JSON} callback.success.video.input.#index The video input source item.
  * <small>Object signature matches <code>callback.success.audio.input.#index</code> format.</small>
- * @example
- *   // Example 1: Retrieve the getUserMedia() stream with selected source ID.
- *   skylinkDemo.getStreamSources(function (sources) {
- *     skylinkDemo.getUserMedia({
- *       audio: sources.audio.input[0].deviceId,
- *       video: sources.video.input[0].deviceId
- *     });
- *   });
- *
- *   // Example 2: Set the output audio speaker (Chrome 49+ supported only)
- *   skylinkDemo.getStreamSources(function (sources) {
- *     var videoElement = document.getElementById('video');
- *     if (videoElement && typeof videoElement.setSinkId === 'function') {
- *       videoElement.setSinkId(sources.audio.output[0].deviceId)
- *     }
- *   });
  * @for Skylink
  * @since 0.6.27
  */
@@ -1165,23 +1013,6 @@ Skylink.prototype.getStreamSources = function(callback) {
  * @param {String} callback.success.mediaSourceInput.#index.label The screen input item label name.
  * @param {String} callback.success.mediaSourceInput.#index.mediaSource The screen input item media source it belongs to.
  * [Rel: Skylink.MEDIA_SOURCE]
- * @example
- *   // Example 1: Retrieve the list of available shareScreen() sources.
- *   skylinkDemo.getScreenSources(function (sources) {
- *     skylinkDemo.shareScreen(sources.mediaSource[0] || null);
- *   });
- *
- *   // Example 2: Retrieve the list of available shareScreen() sources with a specific item.
- *   skylinkDemo.getScreenSources(function (sources) {
- *     if (sources.mediaSourceInput[0]) {
- *       skylinkDemo.shareScreen({
- *         mediaSource: mediaSourceInput[0].mediaSource,
- *         sourceId: mediaSourceInput[0].sourceId
- *       });
- *     } else {
- *       skylinkDemo.shareScreen();
- *     }
- *   });
  * @for Skylink
  * @since 0.6.27
  */

@@ -179,20 +179,6 @@ Skylink.prototype.sendMessage = function(message, targetPeerId) {
  *   &lt;small&gt;Defined as &lt;code&gt;null&lt;/code&gt; when there are errors in request&lt;/small&gt;
  *   &lt;small&gt;Object signature is the &lt;a href=&quot;#event_recordingState&quot;&gt;
  *   &lt;code&gt;recordingState&lt;/code&gt; event&lt;/a&gt; triggered &lt;code&gt;recordingId&lt;/code&gt; parameter payload.&lt;/small&gt;
- * @example
- *   // Example 1: Start recording session
- *   skylinkDemo.startRecording(function (error, success) {
- *     if (error) return;
- *     console.info(&quot;Recording session has started. ID -&gt;&quot;, success);
- *   });
- * @trigger &lt;ol class=&quot;desc-seq&quot;&gt;
- *   &lt;li&gt;If MCU is not connected: &lt;ol&gt;&lt;li&gt;&lt;b&gt;ABORT&lt;/b&gt; and return error.&lt;/li&gt;&lt;/ol&gt;&lt;/li&gt;
- *   &lt;li&gt;If there is an existing recording session currently going on: &lt;ol&gt;
- *   &lt;li&gt;&lt;b&gt;ABORT&lt;/b&gt; and return error.&lt;/li&gt;&lt;/ol&gt;&lt;/li&gt;
- *   &lt;li&gt;Sends to MCU via Signaling server to start recording session. &lt;ol&gt;
- *   &lt;li&gt;If recording session has been started successfully: &lt;ol&gt;
- *   &lt;li&gt;&lt;a href=&quot;#event_recordingState&quot;&gt;&lt;code&gt;recordingState&lt;/code&gt; event&lt;/a&gt; triggers
- *   parameter payload &lt;code&gt;state&lt;/code&gt; as &lt;code&gt;START&lt;/code&gt;.&lt;/li&gt;&lt;/ol&gt;&lt;/li&gt;&lt;/ol&gt;&lt;/li&gt;&lt;/ol&gt;
  * @beta
  * @for Skylink
  * @since 0.6.16
@@ -271,39 +257,6 @@ Skylink.prototype.startRecording = function (callback) {
  *   should result in success only when &lt;a href=&quot;#event_recordingState&quot;&gt;&lt;code&gt;recordingState&lt;/code&gt; event&lt;/a&gt;
  *   triggering &lt;code&gt;state&lt;/code&gt; parameter payload as &lt;code&gt;LINK&lt;/code&gt;.
  * @method stopRecording
- * @example
- *   // Example 1: Stop recording session
- *   skylinkDemo.stopRecording(function (error, success) {
- *     if (error) return;
- *     console.info(&quot;Recording session has stopped. ID -&gt;&quot;, success);
- *   });
- *
- *   // Example 2: Stop recording session with mixin videos link
- *   skylinkDemo.stopRecording(function (error, success) {
- *     if (error) return;
- *     console.info(&quot;Recording session has compiled with links -&gt;&quot;, success.link);
- *   }, true);
- * @trigger &lt;ol class=&quot;desc-seq&quot;&gt;
- *   &lt;li&gt;If MCU is not connected: &lt;ol&gt;&lt;li&gt;&lt;b&gt;ABORT&lt;/b&gt; and return error.&lt;/li&gt;&lt;/ol&gt;&lt;/li&gt;
- *   &lt;li&gt;If there is no existing recording session currently going on: &lt;ol&gt;
- *   &lt;li&gt;&lt;b&gt;ABORT&lt;/b&gt; and return error.&lt;/li&gt;&lt;/ol&gt;&lt;/li&gt;
- *   &lt;li&gt;If existing recording session recording time has not elapsed more than 4 seconds:
- *   &lt;small&gt;4 seconds is mandatory for recording session to ensure better recording
- *   experience and stability.&lt;/small&gt; &lt;ol&gt;&lt;li&gt;&lt;b&gt;ABORT&lt;/b&gt; and return error.&lt;/li&gt;&lt;/ol&gt;&lt;/li&gt;
- *   &lt;li&gt;Sends to MCU via Signaling server to stop recording session: &lt;ol&gt;
- *   &lt;li&gt;If recording session has been stopped successfully: &lt;ol&gt;
- *   &lt;li&gt;&lt;a href=&quot;#event_recordingState&quot;&gt;&lt;code&gt;recordingState&lt;/code&gt; event&lt;/a&gt;
- *   triggers parameter payload &lt;code&gt;state&lt;/code&gt; as &lt;code&gt;START&lt;/code&gt;.
- *   &lt;li&gt;MCU starts mixin recorded session videos: &lt;ol&gt;
- *   &lt;li&gt;If recording session has been mixin successfully with links: &lt;ol&gt;
- *   &lt;li&gt;&lt;a href=&quot;#event_recordingState&quot;&gt;&lt;code&gt;recordingState&lt;/code&gt; event&lt;/a&gt; triggers
- *   parameter payload &lt;code&gt;state&lt;/code&gt; as &lt;code&gt;LINK&lt;/code&gt;.&lt;li&gt;Else: &lt;ol&gt;
- *   &lt;li&gt;&lt;a href=&quot;#event_recordingState&quot;&gt;&lt;code&gt;recordingState&lt;/code&gt; event&lt;/a&gt; triggers
- *   parameter payload &lt;code&gt;state&lt;/code&gt; as &lt;code&gt;ERROR&lt;/code&gt;.&lt;li&gt;&lt;b&gt;ABORT&lt;/b&gt; and return error.&lt;/ol&gt;&lt;/li&gt;
- *   &lt;/ol&gt;&lt;/li&gt;&lt;/ol&gt;&lt;/li&gt;&lt;li&gt;Else: &lt;ol&gt;
- *   &lt;li&gt;&lt;a href=&quot;#event_recordingState&quot;&gt;&lt;code&gt;recordingState&lt;/code&gt; event&lt;/a&gt;
- *   triggers parameter payload &lt;code&gt;state&lt;/code&gt; as &lt;code&gt;ERROR&lt;/code&gt;.&lt;/li&gt;&lt;li&gt;&lt;b&gt;ABORT&lt;/b&gt; and return error.&lt;/li&gt;
- *   &lt;/ol&gt;&lt;/li&gt;&lt;/ol&gt;&lt;/li&gt;&lt;/ol&gt;
  * @beta
  * @for Skylink
  * @since 0.6.16
@@ -396,9 +349,6 @@ Skylink.prototype.stopRecording = function (callback) {
  *   &lt;small&gt;Defined only when &lt;code&gt;state&lt;/code&gt; is &lt;code&gt;LINK&lt;/code&gt;.&lt;/small&gt;&lt;/p&gt;&lt;/li&gt;
  *   &lt;li&gt;&lt;code&gt;error&lt;/code&gt;&lt;var&gt;&lt;b&gt;{&lt;/b&gt;Error&lt;b&gt;}&lt;/b&gt;&lt;/var&gt;&lt;p&gt;The recording session error.
  *   &lt;small&gt;Defined only when &lt;code&gt;state&lt;/code&gt; is &lt;code&gt;ERROR&lt;/code&gt;.&lt;/small&gt;&lt;/p&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;
- * @example
- *   // Example 1: Get recording sessions
- *   skylinkDemo.getRecordings();
  * @beta
  * @for Skylink
  * @since 0.6.16
@@ -1903,12 +1853,6 @@ if (pc.signalingState === self.PEER_CONNECTION_STATE.STABLE) {
  *   &lt;small&gt;Defined as &lt;code&gt;null&lt;/code&gt; when there are errors in request&lt;/small&gt;
  *   &lt;small&gt;Object signature is the &lt;a href=&quot;#event_RTMPState&quot;&gt;
  *   &lt;code&gt;RTMPState&lt;/code&gt; event&lt;/a&gt; triggered &lt;code&gt;RTMPId&lt;/code&gt; parameter payload.&lt;/small&gt;
- * @example
- *   // Example 1: Start RTMP session
- *   skylinkDemo.startRTMPSession(function (error, success) {
- *     if (error) return;
- *     console.info(&quot;RTMP session has started. ID -&gt;&quot;, success);
- *   });
  * @trigger &lt;ol class=&quot;desc-seq&quot;&gt;
  *   &lt;li&gt;If MCU is not connected: &lt;ol&gt;&lt;li&gt;&lt;b&gt;ABORT&lt;/b&gt; and return error.&lt;/li&gt;&lt;/ol&gt;&lt;/li&gt;
  *   &lt;li&gt;Sends to MCU via Signaling server to start RTMP session. &lt;ol&gt;
@@ -1986,12 +1930,6 @@ Skylink.prototype.startRTMPSession = function (streamId, endpoint, callback) {
  *   &lt;small&gt;Object signature is the &lt;code&gt;stopRTMPSession()&lt;/code&gt; error when stopping current RTMP session.&lt;/small&gt;
  * @param {String|JSON} callback.success The success result in request.
  * @method stopRTMPSession
- * @example
- *   // Example 1: Stop RTMP session
- *   skylinkDemo.stopRTMPSession(function (error, success) {
- *     if (error) return;
- *     console.info(&quot;RTMP session has stopped. ID -&gt;&quot;, success);
- *   });
  * @beta
  * @for Skylink
  * @since 0.6.36

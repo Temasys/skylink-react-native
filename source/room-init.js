@@ -344,38 +344,6 @@ Skylink.prototype.generateUUID = function() {
  * @param {JSON|String} callback.success.socketServer The configured value of the <code>options.socketServer</code>.
  * @param {Boolean} callback.success.useEdgeWebRTC The configured value of the <code>options.useEdgeWebRTC</code>.
  * @param {Boolean} callback.success.enableSimultaneousTransfers The configured value of the <code>options.enableSimultaneousTransfers</code>.
- * @example
- *   // Example 1: Using CORS authentication and connection to default Room
- *   skylinkDemo(appKey, function (error, success) {
- *     if (error) return;
- *     skylinkDemo.joinRoom(); // Goes to default Room
- *   });
- *
- *   // Example 2: Using CORS authentication and connection to a different Room
- *   skylinkDemo(appKey, function (error, success) {
- *     skylinkDemo.joinRoom("testxx"); // Goes to "testxx" Room
- *   });
- *
- *   // Example 3: Using credentials authentication and connection to only default Room
- *   var defaultRoom   = "test",
- *       startDateTime = (new Date()).toISOString(),
- *       duration      = 1, // Allows only User session to stay for 1 hour
- *       appKeySecret  = "xxxxxxx",
- *       hash          = CryptoJS.HmacSHA1(defaultRoom + "\_" + duration + "\_" + startDateTime, appKeySecret);
- *       credentials   = encodeURIComponent(hash.toString(CryptoJS.enc.Base64));
- *
- *   skylinkDemo({
- *     defaultRoom: defaultRoom,
- *     appKey: appKey,
- *     credentials: {
- *       duration: duration,
- *       startDateTime: startDateTime,
- *       credentials: credentials
- *     }
- *   }, function (error, success) {
- *     if (error) return;
- *     skylinkDemo.joinRoom(); // Goes to default Room (switching to different Room is not allowed for credentials authentication)
- *   });
  * @trigger <ol class="desc-seq">
  *   <li>If parameter <code>options</code> is not provided: <ol><li><b>ABORT</b> and return error.</li></ol></li>
  *   <li>Checks if dependecies and browser APIs are available. <ol><li>If AdapterJS is not loaded: <ol>

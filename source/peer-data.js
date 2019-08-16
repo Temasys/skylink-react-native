@@ -30,12 +30,6 @@ Skylink.prototype.setUserData = function(userData) {
  * - When not provided or that the Peer ID is does not exists, it will return
  *   the User current custom data.
  * @return {JSON|String} The User / Peer current custom data.
- * @example
- *   // Example 1: Get Peer current custom data
- *   var peerUserData = skylinkDemo.getUserData(peerId);
- *
- *   // Example 2: Get User current custom data
- *   var userUserData = skylinkDemo.getUserData();
  * @for Skylink
  * @since 0.5.10
  */
@@ -59,12 +53,6 @@ Skylink.prototype.getUserData = function(peerId) {
  * @return {JSON} The User / Peer current session information.
  *   <small>Object signature matches the <code>peerInfo</code> parameter payload received in the
  *   <a href="#event_peerJoined"><code>peerJoined</code> event</a>.</small>
- * @example
- *   // Example 1: Get Peer current session information
- *   var peerPeerInfo = skylinkDemo.getPeerInfo(peerId);
- *
- *   // Example 2: Get User current session information
- *   var userPeerInfo = skylinkDemo.getPeerInfo();
  * @for Skylink
  * @since 0.4.0
  */
@@ -277,9 +265,6 @@ Skylink.prototype.getPeerInfo = function(peerId) {
  *   <small>Object signature matches the <code>peerInfo</code> parameter payload received in the
  *   <a href="#event_peerJoined"><code>peerJoined</code> event</a> except there is
  *   the <code>isSelf</code> flag that determines if Peer is User or not.</small></p></li></ul>
- * @example
- *   // Example 1: Get the list of currently connected Peers in the same Room
- *   var peers = skylinkDemo.getPeersInRoom();
  * @for Skylink
  * @since 0.6.16
  */
@@ -309,9 +294,6 @@ Skylink.prototype.getPeersInRoom = function() {
  *   <li><code>streamId</code><var><b>{</b>String<b>}</b></var><p>The Stream ID.</p></li>
  *   <li><code>isSelf</code><var><b>{</b>Boolean<b>}</b></var><p>The flag if Peer is User.</p></li>
  *   </p></li></ul></li></ul>
- * @example
- *   // Example 1: Get the list of current Peers Streams in the same Room
- *   var streams = skylinkDemo.getPeersStream();
  * @for Skylink
  * @since 0.6.16
  */
@@ -379,9 +361,6 @@ Skylink.prototype.getPeersStream = function() {
  *   <li><code>bufferedAmountLowThreshold</code><var><b>{</b>Number<b>}</b></var><p>The Datachannel
  *   buffered amount threshold.</p></li>
  *   </p></li></p></li></ul></li></ul></li></ul>
- * @example
- *   // Example 1: Get the list of current Peers Datachannels in the same Room
- *   var channels = skylinkDemo.getPeersDatachannels();
  * @for Skylink
  * @since 0.6.18
  */
@@ -425,9 +404,6 @@ Skylink.prototype.getPeersDatachannels = function() {
  *   <li><code>peerId</code><var><b>{</b>String<b>}</b></var><p>The sender Peer ID.</p></li>
  *   <li><code>isSelf</code><var><b>{</b>Boolean<b>}</b></var><p>The flag if Peer is User.</p></li>
  *   </p></li></ul></li></ul>
- * @example
- *   // Example 1: Get the list of current data transfers in the same Room
- *   var currentTransfers = skylinkDemo.getCurrentDataTransfers();
  * @for Skylink
  * @since 0.6.18
  */
@@ -463,9 +439,6 @@ Skylink.prototype.getCurrentDataTransfers = function() {
  *   <li><code>peerId</code><var><b>{</b>String<b>}</b></var><p>The sender Peer ID.</p></li>
  *   <li><code>isSelf</code><var><b>{</b>Boolean<b>}</b></var><p>The flag if Peer is User.</p></li>
  *   </p></li></ul></li></ul>
- * @example
- *   // Example 1: Get the list of current data streaming sessions in the same Room
- *   var currentDataStreams = skylinkDemo.getCurrentDataStreamsSession();
  * @for Skylink
  * @since 0.6.18
  */
@@ -506,9 +479,6 @@ Skylink.prototype.getCurrentDataStreamsSession = function() {
  *   <li><code>mediaStatus</code><var><b>{</b>JSON<b>}</b></var><p>The custom Peer Stream muted settings.
  *   <small>Object signature matches the <code>peerInfo.mediaStatus</code> parameter payload received in the
  *   <a href="#event_peerJoined"><code>peerJoined</code> event</a>.</small></p></li></ul></li></ul>
- * @example
- *   // Example 1: Get the list of current Peer custom settings
- *   var currentPeerSettings = skylinkDemo.getPeersCustomSettings();
  * @for Skylink
  * @since 0.6.18
  */
