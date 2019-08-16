@@ -1,4 +1,4 @@
-/*! skylinkjs - v0.6.39 - Fri Aug 16 2019 11:18:06 GMT+0800 (Singapore Standard Time) */
+/*! ReactNativeWebRTC - v0.1.01 - Fri Aug 16 2019 12:51:48 GMT+0800 (Singapore Standard Time) */
 
 import {
   RTCPeerConnection,

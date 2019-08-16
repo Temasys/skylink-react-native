@@ -19,7 +19,7 @@
   ],
   "main": "publish/skylink.min.js",
   "ignore": [
-    "demo/**",
+    "sample-app/**",
     "doc/**",
     "doc-style/**"
   ],

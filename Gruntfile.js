@@ -13,6 +13,8 @@ module.exports = function(grunt) {
 
         production: 'publish',
 
+        sampleApp: 'sample-app',
+
         bamboo: 'bamboo',
 
         clean: {
@@ -29,7 +31,7 @@ module.exports = function(grunt) {
                     dest: '<%= bamboo %>/skylinkjs/<%= pkg.version %>'
                 }, {
                     expand: true,
-                    src: ['doc/**', 'demo/**'],
+                    src: ['doc/**', 'sample-app/**'],
                     dest: '<%= bamboo %>/doc/<%= pkg.version %>'
                 }, {
                 	expand: true,
@@ -39,7 +41,7 @@ module.exports = function(grunt) {
                       'pkg.version_major %>.<%= pkg.version_minor %>.x'
                 }, {
                     expand: true,
-                    src: ['doc/**', 'demo/**'],
+                    src: ['doc/**', 'sample-app/**'],
                     dest: '<%= bamboo %>/doc/<%= pkg.version_major %>.<%= pkg.version_minor %>.x'
                 }, {
                 	expand: true,
@@ -48,7 +50,7 @@ module.exports = function(grunt) {
                     dest: '<%= bamboo %>/skylinkjs/latest'
                 }, {
                     expand: true,
-                    src: ['doc/**', 'demo/**'],
+                    src: ['doc/**', 'sample-app/**'],
                     dest: '<%= bamboo %>/doc/latest'
                 }],
             },
@@ -68,7 +70,8 @@ module.exports = function(grunt) {
                         '<%= template %>/header.js',
                         '<%= source %>/*.js',
                         '<%= template %>/footer.js'
-                    ]
+                    ],
+                    '<%= sampleApp %>/skylink_react_complete.js': ['<%= production %>/skylink.complete.js'],
                 }
             },
         },
