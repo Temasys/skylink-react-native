@@ -1,4 +1,0 @@
-rootProject.name = 'ReactNativeWebRTC'
-
-include ':WebRTCModule',':app'
-project(':WebRTCModule').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-webrtc/android')
