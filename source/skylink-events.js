@@ -1325,11 +1325,6 @@ var _eventsDocs = {
  * @param {String} eventName The event.
  * @param {Function} callback The listener.
  *   <small>This will be invoked when event is triggered.</small>
- * @example
- *   // Example 1: Subscribing to "peerJoined" event
- *   skylinkDemo.on("peerJoined", function (peerId, peerInfo, isSelf) {
- *     console.info("peerJoined event has been triggered with:", peerId, peerInfo, isSelf);
- *   });
  * @for Skylink
  * @since 0.1.0
  */
@@ -1354,28 +1349,6 @@ Skylink.prototype.on = function(eventName, callback) {
  *   <small>When not provided, the conditional function will always return <code>true</code>.</small>
  * @param {Boolean} [fireAlways=false] The flag that indicates if <code>once()</code> should act like
  *   <code>on()</code> but only invoke listener only when conditional function is satisfied.
- * @example
- *   // Example 1: Subscribing to "peerJoined" event that triggers without condition
- *   skylinkDemo.once("peerJoined", function (peerId, peerInfo, isSelf) {
- *     console.info("peerJoined event has been triggered once with:", peerId, peerInfo, isSelf);
- *   });
- *
- *   // Example 2: Subscribing to "incomingStream" event that triggers with condition
- *   skylinkDemo.once("incomingStream", function (peerId, stream, isSelf, peerInfo) {
- *     console.info("incomingStream event has been triggered with User stream:", stream);
- *   }, function (peerId, peerInfo, isSelf) {
- *     return isSelf;
- *   });
- *
- *   // Example 3: Subscribing to "dataTransferState" event that triggers always only when condition is satisfied
- *   skylinkDemo.once("dataTransferState", function (state, transferId, peerId, transferInfo) {
- *     console.info("Received data transfer from Peer:", transferInfo.data);
- *   }, function (state, transferId, peerId) {
- *     if (state === skylinkDemo.DATA_TRANSFER_STATE.UPLOAD_REQUEST) {
- *       skylinkDemo.acceptDataTransfer(peerId, transferId);
- *     }
- *     return state === skylinkDemo.DATA_TRANSFER_STATE.DOWNLOAD_COMPLETED;
- *   }, true);
  * @for Skylink
  * @since 0.5.4
  */
@@ -1405,16 +1378,6 @@ Skylink.prototype.once = function(eventName, callback, condition, fireAlways) {
  * - When not provided, all listeners to all events will be unsubscribed.
  * @param {Function} [callback] The listener to unsubscribe.
  * - When not provided, all listeners associated to the event will be unsubscribed.
- * @example
- *   // Example 1: Unsubscribe all "peerJoined" event
- *   skylinkDemo.off("peerJoined");
- *
- *   // Example 2: Unsubscribe only one listener from "peerJoined event"
- *   var pJListener = function (peerId, peerInfo, isSelf) {
- *     console.info("peerJoined event has been triggered with:", peerId, peerInfo, isSelf);
- *   };
- *
- *   skylinkDemo.off("peerJoined", pJListener);
  * @for Skylink
  * @since 0.5.5
  */

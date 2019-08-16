@@ -57,21 +57,6 @@ Skylink.prototype.getPeers = function(showAll, callback){
  *   <li>If received errors from Signaling server: <ol>
  *   <li><a href="#event_introduceStateChange"><code>introduceStateChange</code> event</a> triggers parameter
  *   payload <code>state</code> value as <code>ERROR</code>.</li></ol></li></ol></li></ol>
- * @example
- *   // Example 1: Introduce a pair of Peers
- *   skylinkDemo.on("introduceStateChange", function (state, privilegedPeerId, sendingPeerId, receivingPeerId) {
- *	   if (state === skylinkDemo.INTRODUCE_STATE.INTRODUCING) {
- *       console.log("Peer '" + sendingPeerId + "' has been introduced to '" + receivingPeerId + "'");
- *     }
- *   });
- *
- *   skylinkDemo.joinRoom(function (jRError, jRSuccess) {
- *     if (jRError) return;
- *     skylinkDemo.getPeers(function (gPError, gPSuccess) {
- *        if (gPError) return;
- *        skylinkDemo.introducePeer(gPSuccess.roomName[0], gPSuccess.roomName[1]);
- *     });
- *   });
  * @for Skylink
  * @since 0.6.1
  */

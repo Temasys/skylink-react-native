@@ -217,19 +217,6 @@ Skylink.prototype._createDataChannel = function(peerId, dataChannel, bufferThres
  * Function that refreshes the main messaging Datachannel.
  * @method refreshDatachannel
  * @param {String} [peerId] The target Peer ID to retrieve connection stats from.
- * @example
- *   // Example 1: Retrieve offerer and refresh datachannel:
- *   skylink.on("dataChannelState", function (state, peerId, error, channelName, channelType) {
- *   if (channelType === skylink.DATA_CHANNEL_TYPE.MESSAGING &&
- *    state === skylink.DATA_CHANNEL_STATE.CLOSED) {
- *    var userWeight = skylink.getPeerInfo().config.priorityWeight;
- *    var peerWeight = skylink.getPeerInfo(peerId).config.priorityWeight;
- *    // Determine who is offerer because as per SM protocol, higher weight is offerer
- *    if (userWeight > peerWeight) {
- *      skylink.refreshDatachannel(peerId);
- *    }
- *  }
- *  });
  * @for Skylink
  * @since 0.6.30
  */

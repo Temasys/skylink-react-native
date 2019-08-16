@@ -90,45 +90,6 @@ var clone = function (obj) {
  *
  * @class Skylink
  * @constructor
- * @example
- *   // Here's a simple example on how you can start using Skylink.
- *   var skylinkDemo = new Skylink();
- *
- *   // Subscribe all events first as a general guideline
- *   skylinkDemo.on("incomingStream", function (peerId, stream, peerInfo, isSelf) {
- *     if (isSelf) {
- *       attachMediaStream(document.getElementById("selfVideo"), stream);
- *     } else {
- *       var peerVideo = document.createElement("video");
- *       peerVideo.id = peerId;
- *       peerVideo.autoplay = "autoplay";
- *       document.getElementById("peersVideo").appendChild(peerVideo);
- *       attachMediaStream(peerVideo, stream);
- *     }
- *   });
- *
- *   skylinkDemo.on("peerLeft", function (peerId, peerInfo, isSelf) {
- *     if (!isSelf) {
- *       var peerVideo = document.getElementById(peerId);
- *       // do a check if peerVideo exists first
- *       if (peerVideo) {
- *         document.getElementById("peersVideo").removeChild(peerVideo);
- *       } else {
- *         console.error("Peer video for " + peerId + " is not found.");
- *       }
- *     }
- *   });
- *
- *  // init() should always be called first before other methods other than event methods like on() or off().
- *  skylinkDemo.init("YOUR_APP_KEY_HERE", function (error, success) {
- *    if (success) {
- *      skylinkDemo.joinRoom("my_room", {
- *        userData: "My Username",
- *        audio: true,
- *        video: true
- *      });
- *    }
- *  });
  * @for Skylink
  * @since 0.5.0
  */
