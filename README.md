@@ -85,5 +85,3 @@ Please note that rendering the video stream should be done in the React way as s
 
 ### Limitations
  - MCU Keys are not supported with this version of Skylink RN
-
- - The Temasys WebRTC Plugin is not supported with this version of Skylink RN
