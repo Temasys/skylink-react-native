@@ -19,15 +19,11 @@ import {
   Image
 } from "react-native";
 import CryptoJS from "crypto-js";
-import { Skylink } from "./skylink_react_complete";
+import { Skylink } from "./skylink_rn.complete";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
-const skylink = new Skylink();
-
-window.skylink = skylink;
-
 const config = {
-  appKey: "8e1a0925-191e-4db6-a8a7-35183535032a",
+  appKey: "c7ae7e8a-2e24-43a5-85c6-d4dafbdfecb6",
   defaultRoom: "test4",
   forceSSL: false,
   video: {
@@ -35,9 +31,10 @@ const config = {
   }
 };
 
-const secret = "04ryfwlmoq88h"; // 'xxxxx' Use App Key secret
+const secret = "ugmhml9xv7"; // 'xxxxx' Use App Key secret
 const duration = 2; // 2 hours. Default is 24 for CORS auth
 const startDateTimeStamp = new Date().toISOString();
+
 if (secret) {
   const genHashForCredentials = CryptoJS.HmacSHA1(
     `${config.defaultRoom}_${duration}_${startDateTimeStamp}`,
@@ -53,9 +50,8 @@ if (secret) {
     credentials
   };
 }
-skylink.setLogLevel(4);
-console.log("before init");
-
+const skylink = new Skylink(config);
+window.skylink = skylink;
 const dimensions = Dimensions.get("window");
 
 const instructions = Platform.select({
@@ -65,9 +61,10 @@ const instructions = Platform.select({
     "Shake or press menu button for dev menu"
 });
 
-type Props = {};
+const skylinkEventManager = Skylink.SkylinkEventManager;
+const events = Skylink.SkylinkConstants.EVENTS;
 
-export default class App extends Component<Props> {
+export default class App extends Component {
   constructor(props) {
     super(props);
     this.nextUrlId = 1;
@@ -94,47 +91,52 @@ export default class App extends Component<Props> {
 
     try {
       this.joinRoom();
+      skylinkEventManager.addEventListener(events.INCOMING_STREAM, response => {
+        console.log("WHEN INIT", response);
 
-      skylink.on(
-        "incomingStream",
-        (peerId, stream, isSelf, peerInfo, isScreensharing, streamId) => {
-          if (isSelf) {
-            return;
-          }
-          const url = stream.toURL();
-          self.addUrl(url, peerId);
+        if (response.detail.isSelf) {
+          return;
         }
-      );
+        const url = response.detail.stream.toURL();
+        self.addUrl(url, response.detail.peerId);
+      });
 
-      skylink.on("peerLeft", function(peerID) {
+      skylinkEventManager.addEventListener(events.PEER_LEFT, function(
+        response
+      ) {
         if (self.state.localStreamURL) {
           let updatedStreamlist = self.state.streamList
             .map(item => {
               return item.peerID;
             })
-            .indexOf(peerID);
+            .indexOf(response.detail.peerID);
+          console.log("PEERID", response.detail.peerID);
           self.state.streamList.splice(updatedStreamlist, 1);
           self.setState({ streamList: self.state.streamList });
         }
         console.log("this peer peerLeft");
       });
 
-      skylink.on("peerJoined", (peerId, peerInfo, isSelf) => {
-        console.log("new peer has joined,", peerId, peerInfo, isSelf);
+      skylinkEventManager.addEventListener(events.PEER_JOINED, response => {
+        console.log(
+          "new peer has joined,",
+          response.detail.peerId,
+          response.detail.peerInfo,
+          response.detail.isSelf
+        );
       });
 
       //User in the room (including us) sent a message
-      skylink.on("incomingMessage", function(
-        message,
-        peerId,
-        peerInfo,
-        isSelf
+      skylinkEventManager.addEventListener(events.ON_INCOMING_MESSAGE, function(
+        response
       ) {
-        const Name = peerInfo.userData + (isSelf ? " (You)" : "");
-        self.addMessage(Name, message.content);
+        const Name =
+          response.detail.peerInfo.userData +
+          (response.detail.isSelf ? " (You)" : "");
+        self.addMessage(Name, response.detail.message.content);
       });
     } catch (error) {
-      consol.log(error);
+      console.log(error);
       this.setState({ hasError: true });
     }
   }
@@ -219,7 +221,7 @@ export default class App extends Component<Props> {
             {this.state.isVideoChat && (
               <View style={styles.videoWidgetLocal}>
                 {this.state.localStreamURL && !this.state.isChatOpen && (
-                  <RTCView
+                  <window.RTCView
                     streamURL={this.state.localStreamURL}
                     style={styles.rtcViewLocal}
                   />
@@ -231,7 +233,7 @@ export default class App extends Component<Props> {
               <View style={styles.videoWidgetRemote}>
                 {this.state.streamList.map((stream, index) => {
                   return (
-                    <RTCView
+                    <window.RTCView
                       streamURL={stream.streamUrl}
                       style={styles.rtcViewRemote}
                       key={stream.id}
@@ -258,9 +260,13 @@ export default class App extends Component<Props> {
                 }}
               >
                 <View style={styles.chatTextView}>
-                  {this.state.messageList.map(item => {
+                  {this.state.messageList.map((item, index) => {
+                    console.log(item);
                     return (
-                      <Text key={item} style={styles.messageNode}>
+                      <Text
+                        key={index + Math.random() * 111}
+                        style={styles.messageNode}
+                      >
                         {item}
                       </Text>
                     );
@@ -308,31 +314,32 @@ export default class App extends Component<Props> {
   joinRoom = () => {
     let self = this;
     this.state.isVideoChat = true;
-    skylink.init(config, (error, success) => {
-      self.success = success;
-      var displayName = "User_" + Math.floor(Math.random() * 1000 + 1);
-      skylink.joinRoom(
-        {
-          userData: displayName,
-          audio: true,
-          video: true
-        },
-        function() {
-          self.setState({ isRoomJoined: true });
-        }
-      );
-    });
-
-    skylink.on("mediaAccessSuccess", stream => {
-      console.log("mediaAccessSuccess");
-      const url = stream.toURL();
-      self.setState({
-        localStreamURL: url
+    self.success = config.defaultRoom;
+    var displayName = "User_" + Math.floor(Math.random() * 1000 + 1);
+    skylink
+      .joinRoom({
+        userData: displayName,
+        audio: true,
+        video: true
+      })
+      .then(res => {
+        self.setState({ isRoomJoined: true });
       });
-    });
+
+    skylinkEventManager.addEventListener(
+      events.MEDIA_ACCESS_SUCCESS,
+      response => {
+        const url = response.detail.stream.toURL();
+        self.setState({
+          localStreamURL: url
+        });
+      }
+    );
   };
+
   toggleView = () => {
     console.log("toggle view clicked");
+    skylink.stopStream(config.defaultRoom);
     let self = this;
     if (self.state.isFrontCamera) {
       self.setState({
@@ -356,7 +363,7 @@ export default class App extends Component<Props> {
     };
 
     window.getUserMedia(options).then(stream => {
-      skylink.sendStream(stream, function(error, success) {
+      skylink.sendStream(config.defaultRoom, stream).then(function(success) {
         const url = stream.toURL();
         self.setState({
           localStreamURL: url
@@ -369,13 +376,14 @@ export default class App extends Component<Props> {
       });
     });
   };
+
   leaveRoom = () => {
     this.state.isVideoChat = false;
     this.setState({ streamList: [] });
     this.setState({ localStreamURL: null });
     this.setState({ isChatOpen: false });
     this.setState({ isRoomJoined: false });
-    skylink.leaveRoom();
+    skylink.leaveRoom(config.defaultRoom);
   };
 
   joinChat = () => {
@@ -387,7 +395,7 @@ export default class App extends Component<Props> {
     this.setState({ isChatOpen: true });
     self.state.messageList.push(
       <Text style={[styles.joinNode, styles.bold]}>
-        {"Join Room " + self.success.selectedRoom}
+        {"Join Room " + self.success}
       </Text>
     );
     self.setState({ messageList: self.state.messageList });
@@ -402,7 +410,7 @@ export default class App extends Component<Props> {
 
   enterText = () => {
     if (!this.state.isRoomJoined) return;
-    skylink.sendMessage(this.state.text);
+    skylink.sendMessage(config.defaultRoom, this.state.text);
     this.setState({ text: "" });
   };
 }
