@@ -1,4 +1,4 @@
-/* SkylinkJS-React-Native v1.0.0 Fri Nov 29 2019 17:50:18 GMT+0800 (Singapore Standard Time) */
+/* SkylinkJS-React-Native v1.0.0 Fri Dec 06 2019 13:59:38 GMT+0800 (Singapore Standard Time) */
     
 import io from './node_modules/socket.io-client/dist/socket.io.dev';
 import  AdapterJS from 'adapterjs_rn'; // TODO: update once package name is set
@@ -29,7 +29,7 @@ const reactNativeWebrtc = {
   AdapterJS = AdapterJS && AdapterJS.hasOwnProperty('default') ? AdapterJS['default'] : AdapterJS;
   io = io && io.hasOwnProperty('default') ? io['default'] : io;
 
-  /* AdapterJS-React-Native Fri Nov 29 2019 17:49:43 GMT+0800 (Singapore Standard Time) */
+  /* AdapterJS-React-Native Fri Dec 06 2019 13:59:38 GMT+0800 (Singapore Standard Time) */
 
   // AdapterJS_RN will be bundled with Skylink and replace all AdapterJS references
   const AdapterJS_RN = {
@@ -79,14 +79,20 @@ const reactNativeWebrtc = {
       }
     },
     fetch: global.fetch,
-    WebSocket: true
+    WebSocket: true,
+  };
+
+  AdapterJS_RN.deleteWindowAndLocation = () => {
+    delete global["window"];
+    delete global["location"];
   };
 
   AdapterJS_RN.assignWindow = () => {
-    global.window = AdapterJS_RN.window;
+    global.window = Object.assign(AdapterJS_RN.windowClone, AdapterJS_RN.window);
   };
 
   AdapterJS_RN.initOverride = () => {
+    AdapterJS_RN.deleteWindowAndLocation();
     AdapterJS_RN.assignWindow();
   };
 
@@ -3821,7 +3827,6 @@ const reactNativeWebrtc = {
     module.exports = clone;
   }
   });
-  var clone_2 = clone_1.clone;
 
   // requires the mid to be set after setOffer both local or remote
   const retrieveTransceiverMid = (room, track) => {
@@ -4007,6 +4012,7 @@ const reactNativeWebrtc = {
     } else {
       url = `${signalingServerProtocol}//${signalingServer}:${signalingServerPort}?rand=${Date.now()}`;
     }
+
     return url;
   };
 
@@ -4060,6 +4066,7 @@ const reactNativeWebrtc = {
     config.socketServerPath = socketServerPath;
     skylinkState.socketSession = config;
     Skylink.setSkylinkState(skylinkState, params.roomKey);
+
     return window.io(url, socketConfig);
   };
 
@@ -7051,24 +7058,22 @@ const reactNativeWebrtc = {
 
     Skylink.setSkylinkState(state, currentRoom.id);
 
-// peerConnection.createOffer(successCb, failreCb,)
-
-return new Promise((resolve, reject) => {
-  peerConnection.createOffer(AdapterJS.webrtcDetectedType === 'plugin' ? {
-    mandatory: {
-      OfferToReceiveAudio: offerConstraints.offerToReceiveAudio,
-      OfferToReceiveVideo: offerConstraints.offerToReceiveVideo,
-      iceRestart: offerConstraints.iceRestart,
-      voiceActivityDetection: offerConstraints.voiceActivityDetection,
-    },
-  } : offerConstraints)
-    .then((offer) => {
-      onOfferCreated(resolve, targetMid, state, restartOfferMsg, offer);
-    })
-    .catch((err) => {
-      onOfferFailed(reject, targetMid, state, err);
+    return new Promise((resolve, reject) => {
+      peerConnection.createOffer(AdapterJS.webrtcDetectedType === 'plugin' ? {
+        mandatory: {
+          OfferToReceiveAudio: offerConstraints.offerToReceiveAudio,
+          OfferToReceiveVideo: offerConstraints.offerToReceiveVideo,
+          iceRestart: offerConstraints.iceRestart,
+          voiceActivityDetection: offerConstraints.voiceActivityDetection,
+        },
+      } : offerConstraints)
+        .then((offer) => {
+          onOfferCreated(resolve, targetMid, state, restartOfferMsg, offer);
+        })
+        .catch((err) => {
+          onOfferFailed(reject, targetMid, state, err);
+        });
     });
-});
   };
 
   /* eslint-disable no-param-reassign */
@@ -8508,11 +8513,8 @@ return new Promise((resolve, reject) => {
     rtcPeerConnection.onsignalingstatechange = callbacks.onsignalingstatechange.bind(rtcPeerConnection, ...callbackExtraParams);
     rtcPeerConnection.onicegatheringstatechange = callbacks.onicegatheringstatechange.bind(rtcPeerConnection, ...callbackExtraParams);
     rtcPeerConnection.onaddstream = (evt) => {
-      console.log("REMOTE PEER STREAM EVT", evt)
-    }
-    rtcPeerConnection.onaddtrack = (evt) => {
-      console.log("REMOTE PEER ON ADD TRACK EVT", evt)
-    }
+      console.log('REMOTE PEER STREAM EVT', evt);
+    };
 
     return rtcPeerConnection;
   };
@@ -8628,9 +8630,6 @@ return new Promise((resolve, reject) => {
 
       try {
         const config = connection.getConfiguration();
-        if (!config) {
-          console.log(connection.getSdpSemantics());
-        }
         // connection.addTransceiver("video");
         if (config.sdpSemantics === SDP_SEMANTICS.UNIFIED) {
           logger.log.INFO([targetMid, 'SDP Semantics', null, 'Peer Connection has Unified plan.']);
@@ -8717,12 +8716,12 @@ return new Promise((resolve, reject) => {
     // { iceRestart: true }
     return new Promise((resolve, reject) => {
       peerConnection.createAnswer(answerConstraints)
-      .then((answer) => {
-        onAnswerCreated(resolve, targetMid, roomState, answer);
-      })
-      .catch((err) => {
-        onAnswerFailed(reject, targetMid, roomState, err);
-      });
+        .then((answer) => {
+          onAnswerCreated(resolve, targetMid, roomState, answer);
+        })
+        .catch((err) => {
+          onAnswerFailed(reject, targetMid, roomState, err);
+        });
     });
   };
 
@@ -12226,8 +12225,7 @@ return new Promise((resolve, reject) => {
     handleNegotationStats.send(room.id, STATS_MODULE.HANDLE_NEGOTIATION_STATS[msgType][type], targetMid, localDescription, false);
 
     return peerConnection.setLocalDescription(localDescription)
-      .then(() => {
-        return peerConnection});
+      .then(() => peerConnection);
   };
 
   const onLocalDescriptionSetSuccess = (RTCPeerConnection, room, targetMid, localDescription) => {
@@ -12422,6 +12420,7 @@ return new Promise((resolve, reject) => {
     if (!hasError(state, message)) {
       try {
         updateState(state, message);
+
         PeerMedia.setPeerMediaInfo(room, targetMid, mediaInfoList);
         PeerMedia.deleteUnavailableMedia(room, targetMid); // mediaState can be unavailable during renegotiation
 
@@ -12443,9 +12442,7 @@ return new Promise((resolve, reject) => {
               return setLocalDescription(room, targetMid, localDescription);
             })
             .then(peerConnection => onLocalDescriptionSetSuccess(peerConnection, room, targetMid, localDescription))
-            .catch(error => {
-              onLocalDescriptionSetFailure(room, targetMid, localDescription, error)
-            });
+            .catch(error => onLocalDescriptionSetFailure(room, targetMid, localDescription, error));
         } else if (bufferedLocalOffer[targetMid]) {
           const localDescription = bufferedLocalOffer[targetMid];
           const remoteDescription = {
@@ -12483,11 +12480,7 @@ return new Promise((resolve, reject) => {
 
     return new Promise((resolve) => {
       const peerConnection = peerConnections[peerId];
-      const pcSenders = peerConnection.getSenders ? peerConnection.getSenders() : false;
-      if (!pcSenders) {
-        resolve(false)
-      }
-
+      const pcSenders = peerConnection.getSenders();
       const senderGetStatsPromises = [];
       const savedSenders = currentRTCRTPSenders[peerId] || [];
       let isRenegoNeeded = false;
@@ -14361,7 +14354,6 @@ return new Promise((resolve, reject) => {
      */
     answer(...args) {
       return this.messageBuilder.getAnswerMessage(...args).then((answer) => {
-        console.log("answer sent");
         this.sendMessage(answer);
         return answer;
       });
@@ -14369,7 +14361,6 @@ return new Promise((resolve, reject) => {
 
     answerAck(...args) {
       const answerAck = this.messageBuilder.getAnswerAckMessage(...args);
-      console.log("answerAck sent");
       this.sendMessage(answerAck);
     }
 
@@ -14379,7 +14370,6 @@ return new Promise((resolve, reject) => {
      */
     enterRoom(...args) {
       const enter = this.messageBuilder.getEnterRoomMessage(...args);
-      console.log("enter sent");
       this.sendMessage(enter);
     }
 
@@ -14390,14 +14380,12 @@ return new Promise((resolve, reject) => {
 
     offer(...args) {
       this.messageBuilder.getOfferMessage(...args).then((offer) => {
-        console.log("offer sent");
         this.sendMessage(offer);
       });
     }
 
     welcome(...args) {
       const welcome = this.messageBuilder.getWelcomeMessage(...args);
-      console.log("welcome sent");
       this.sendMessage(welcome);
     }
 
