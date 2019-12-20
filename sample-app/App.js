@@ -51,6 +51,7 @@ if (secret) {
   };
 }
 const skylink = new Skylink(config);
+console.log("HELLO");
 window.skylink = skylink;
 const dimensions = Dimensions.get("window");
 
@@ -101,28 +102,39 @@ export default class App extends Component {
         self.addUrl(url, response.detail.peerId);
       });
 
-      skylinkEventManager.addEventListener(events.PEER_LEFT, function(
-        response
-      ) {
+      skylinkEventManager.addEventListener(events.PEER_LEFT, response => {
         if (self.state.localStreamURL) {
           let updatedStreamlist = self.state.streamList
-            .map(item => {
-              return item.peerID;
-            })
-            .indexOf(response.detail.peerID);
-          console.log("PEERID", response.detail.peerID);
+          .map(item => {
+            return item.peerID;
+          })
+          .indexOf(response.detail.peerID);
+          console.log(
+              "PEER LEFT:",
+              response.detail.peerId,
+              response.detail.peerInfo,
+              response.detail.isSelf
+          );
           self.state.streamList.splice(updatedStreamlist, 1);
           self.setState({ streamList: self.state.streamList });
         }
-        console.log("this peer peerLeft");
       });
 
       skylinkEventManager.addEventListener(events.PEER_JOINED, response => {
         console.log(
-          "new peer has joined,",
+          "PEER JOINED :",
           response.detail.peerId,
           response.detail.peerInfo,
           response.detail.isSelf
+        );
+      });
+
+      skylinkEventManager.addEventListener(events.PEER_UPDATED, response => {
+        console.log(
+            "PEER UPDATED :",
+            response.detail.peerId,
+            response.detail.peerInfo,
+            response.detail.isSelf
         );
       });
 
@@ -196,6 +208,16 @@ export default class App extends Component {
                       onPress={this.toggleView}
                     />
                   </TouchableOpacity>
+                ) && (
+                    <TouchableOpacity>
+                      <Icon
+                          style={styles.navItem}
+                          name={this.state.localStreamURL ? "stop-circle" : "play-circle"}
+                          size={22}
+                          color={"white"}
+                          onPress={this.state.localStreamURL ? this.stopStream : this.sendStream}
+                      />
+                    </TouchableOpacity>
                 )}
                 {this.state.isRoomJoined && (
                   <TouchableOpacity
@@ -337,6 +359,17 @@ export default class App extends Component {
     );
   };
 
+  stopStream = () => {
+    console.log("stopStream toggled");
+    this.setState({ localStreamURL: null });
+    skylink.stopStream(config.defaultRoom);
+  };
+
+  sendStream = () => {
+    console.log("sendStream toggled");
+    skylink.sendStream(config.defaultRoom, {audio: true, video: true});
+  };
+
   toggleView = () => {
     console.log("toggle view clicked");
     skylink.stopStream(config.defaultRoom);
@@ -383,7 +416,10 @@ export default class App extends Component {
     this.setState({ localStreamURL: null });
     this.setState({ isChatOpen: false });
     this.setState({ isRoomJoined: false });
-    skylink.leaveRoom(config.defaultRoom);
+    skylink.leaveRoom(config.defaultRoom)
+    .then((result) => {
+      console.log("PEER LEFT ROOM :", result);
+    });
   };
 
   joinChat = () => {

@@ -1,4 +1,4 @@
-/* SkylinkJS-React-Native v1.0.0 Fri Dec 06 2019 13:59:38 GMT+0800 (Singapore Standard Time) */
+/* SkylinkJS-React-Native v1.0.0 Fri Dec 20 2019 16:16:52 GMT+0800 (Singapore Standard Time) */
     
 import io from './node_modules/socket.io-client/dist/socket.io.dev';
 import  AdapterJS from 'adapterjs_rn'; // TODO: update once package name is set
@@ -29,7 +29,7 @@ const reactNativeWebrtc = {
   AdapterJS = AdapterJS && AdapterJS.hasOwnProperty('default') ? AdapterJS['default'] : AdapterJS;
   io = io && io.hasOwnProperty('default') ? io['default'] : io;
 
-  /* AdapterJS-React-Native Fri Dec 06 2019 13:59:38 GMT+0800 (Singapore Standard Time) */
+  /* AdapterJS-React-Native Fri Dec 20 2019 16:16:52 GMT+0800 (Singapore Standard Time) */
 
   // AdapterJS_RN will be bundled with Skylink and replace all AdapterJS references
   const AdapterJS_RN = {
@@ -2659,6 +2659,7 @@ const reactNativeWebrtc = {
     CHROME: 'chrome',
     FIREFOX: 'firefox',
     SAFARI: 'safari',
+    REACT_NATIVE: 'react-native',
   };
 
   /**
@@ -3160,6 +3161,13 @@ const reactNativeWebrtc = {
       EVENT_REGISTER_ERROR: 'Error registering event',
       EVENT_UNREGISTER_ERROR: 'Error unregistering event',
     },
+    BROWSER_AGENT: {
+      REACT_NATIVE: {
+        ERRORS: {
+          DROPPING_ONREMOVETRACK: 'Dropping onremovetrack as trackInfo is malformed',
+        },
+      },
+    },
   };
 
   class SkylinkEventManager {
@@ -3205,10 +3213,9 @@ const reactNativeWebrtc = {
 
       if (!this.events[evt.name]) {
         logger.log.DEBUG([null, TAGS.SKYLINK_EVENT, evt.name, MESSAGES.LOGGER.EVENT_DISPATCHED]);
-        return;
       }
 
-      const userCallbacks = this.events[evt.name].callbacks;
+      const userCallbacks = this.events[evt.name] ? this.events[evt.name].callbacks : [];
       const privateCallbacks = this.privateEvents[evt.name] ? this.privateEvents[evt.name].callbacks : [];
       const allEventCallbacks = userCallbacks.concat(privateCallbacks);
       allEventCallbacks.forEach((callback) => {
@@ -8201,7 +8208,7 @@ const reactNativeWebrtc = {
       // Do an initial getConnectionStatus() to backfill the first retrieval in order to do (currentTotalStats - lastTotalStats).
       PeerConnection.getConnectionStatus(state, targetMid).then(() => {
         statsInterval = setInterval(() => {
-          if (peerConnection.signalingState === PEER_CONNECTION_STATE.CLOSED) {
+          if (peerConnection.signalingState === PEER_CONNECTION_STATE.CLOSED || peerConnection.iceConnectionState === PEER_CONNECTION_STATE.CLOSED) {
             clearInterval(statsInterval);
           } else {
             new HandleBandwidthStats().send(state.room.id, peerConnection, targetMid);
@@ -8360,14 +8367,14 @@ const reactNativeWebrtc = {
     Skylink.setSkylinkState(updatedState, updatedState.room.id);
   };
 
-  const dispatchStreamEndedEvent = (state, peerId, isScreensharing, rtcTrackEvent) => {
+  const dispatchStreamEndedEvent = (state, peerId, isScreensharing, rtcTrackEvent, stream) => {
     dispatchEvent(streamEnded({
       room: state.room,
       peerId,
       peerInfo: PeerData.getPeerInfo(peerId, state),
       isSelf: false,
       isScreensharing,
-      streamId: rtcTrackEvent.track.id,
+      streamId: stream.id,
       isVideo: rtcTrackEvent.track.kind === TRACK_KIND.VIDEO,
       isAudio: rtcTrackEvent.track.kind === TRACK_KIND.AUDIO,
     }));
@@ -8423,7 +8430,7 @@ const reactNativeWebrtc = {
     }
 
     updateMediaStatus(state, peerId, stream.id);
-    dispatchStreamEndedEvent(state, peerId, isScreensharing, rtcTrackEvent);
+    dispatchStreamEndedEvent(state, peerId, isScreensharing, rtcTrackEvent, stream);
 
     if (isScreensharing) {
       // Dispatch to ensure that the client has a way of retrieving the camera stream. Camera stream was not added to pc and therefore ontrack will not trigger on remote.
@@ -8434,8 +8441,22 @@ const reactNativeWebrtc = {
   };
 
   /**
+   * React Native only callback to retrieve senders from the peer connection as the sender object is not returned from peerConnection.addTrack.
+   * @param peerConnection
+   * @param targetMid
+   * @param currentRoomState
+   * @param event
+   * @memberOf PeerConnection.PeerConnectionHelpers.CreatePeerConnectionCallbacks
+   */
+  const onsenderadded = (peerConnection, targetMid, currentRoomState, event) => {
+    const updatedState = Skylink.getSkylinkState(currentRoomState.room.id);
+    const { sender } = event;
+    helpers$2.processNewSender(updatedState, targetMid, sender);
+  };
+
+  /**
    * @description Callbacks for createPeerConnection method
-   * @type {{ondatachannel, onicecandidate, oniceconnectionstatechange, onicegatheringstatechange, onsignalingstatechange, ontrack, onremovetrack}}
+   * @type {{ondatachannel, onicecandidate, oniceconnectionstatechange, onicegatheringstatechange, onsignalingstatechange, ontrack, onremovetrack, onsenderadded}}
    * @memberOf PeerConnection.PeerConnectionHelpers
    * @namespace CreatePeerConnectionCallbacks
    * @private
@@ -8448,6 +8469,7 @@ const reactNativeWebrtc = {
     onicegatheringstatechange,
     onsignalingstatechange,
     onremovetrack,
+    onsenderadded,
   };
 
   const createNativePeerConnection = (targetMid, constraints, optional, hasScreenShare, currentRoom) => {
@@ -8512,9 +8534,10 @@ const reactNativeWebrtc = {
     rtcPeerConnection.oniceconnectionstatechange = callbacks.oniceconnectionstatechange.bind(rtcPeerConnection, ...callbackExtraParams);
     rtcPeerConnection.onsignalingstatechange = callbacks.onsignalingstatechange.bind(rtcPeerConnection, ...callbackExtraParams);
     rtcPeerConnection.onicegatheringstatechange = callbacks.onicegatheringstatechange.bind(rtcPeerConnection, ...callbackExtraParams);
-    rtcPeerConnection.onaddstream = (evt) => {
-      console.log('REMOTE PEER STREAM EVT', evt);
-    };
+
+    if (AdapterJS.webrtcDetectedBrowser === BROWSER_AGENT.REACT_NATIVE) {
+      rtcPeerConnection.onsenderadded = callbacks.onsenderadded.bind(rtcPeerConnection, ...callbackExtraParams);
+    }
 
     return rtcPeerConnection;
   };
@@ -9213,7 +9236,7 @@ const reactNativeWebrtc = {
               createAsMessagingChannel: true,
               roomState: state,
             });
-            handleDataChannelStats.send(STATS_MODULE.HANDLE_DATA_CHANNEL_STATS.reconnecting, peerId, { label: channelName }, 'main');
+            handleDataChannelStats.send(room.id, STATS_MODULE.HANDLE_DATA_CHANNEL_STATS.reconnecting, peerId, { label: channelName }, 'main');
           }
         }, 100);
       }
@@ -10179,12 +10202,23 @@ const reactNativeWebrtc = {
     Skylink.setSkylinkState(updatedState, room.id);
   };
 
+  const processNewSender = (state, targetMid, sender) => {
+    const updatedState = state;
+    if (!updatedState.currentRTCRTPSenders[targetMid]) {
+      updatedState.currentRTCRTPSenders[targetMid] = [];
+    }
+
+    updatedState.currentRTCRTPSenders[targetMid].push(sender);
+
+    Skylink.setSkylinkState(updatedState, updatedState.room.id);
+  };
+
   /**
    * @namespace PeerConnectionHelpers
    * @description All helper and utility functions for <code>{@link PeerConnection}</code> class are listed here.
    * @private
    * @memberof PeerConnection
-   * @type {{createOffer, createAnswer, addPeer, createDataChannel, sendP2PMessage, getPeersInRoom, signalingEndOfCandidates, getDataChannelBuffer, refreshDataChannel, closeDataChannel, refreshConnection, refreshPeerConnection, restartPeerConnection, buildPeerInformations, getConnectionStatus, closePeerConnection, updatePeerInformationsMediaStatus }}
+   * @type {{createOffer, createAnswer, addPeer, createDataChannel, sendP2PMessage, getPeersInRoom, signalingEndOfCandidates, getDataChannelBuffer, refreshDataChannel, closeDataChannel, refreshConnection, refreshPeerConnection, restartPeerConnection, buildPeerInformations, getConnectionStatus, closePeerConnection, updatePeerInformationsMediaStatus, processNewSender }}
    */
   const helpers$2 = {
     createOffer,
@@ -10204,6 +10238,7 @@ const reactNativeWebrtc = {
     getConnectionStatus,
     closePeerConnection,
     updatePeerInformationsMediaStatus,
+    processNewSender,
   };
 
   const addScreenStreamToState = (state, stream) => {
@@ -12480,7 +12515,7 @@ const reactNativeWebrtc = {
 
     return new Promise((resolve) => {
       const peerConnection = peerConnections[peerId];
-      const pcSenders = peerConnection.getSenders();
+      const pcSenders = peerConnection.getSenders ? peerConnection.getSenders() : [];
       const senderGetStatsPromises = [];
       const savedSenders = currentRTCRTPSenders[peerId] || [];
       let isRenegoNeeded = false;
@@ -14607,6 +14642,36 @@ const reactNativeWebrtc = {
     return peerMedia;
   };
 
+  const processOnRemoveTrack = (state, peerId, clonedMediaInfo) => {
+    const { AdapterJS } = window;
+    if (AdapterJS.webrtcDetectedBrowser === BROWSER_AGENT.REACT_NATIVE && clonedMediaInfo) {
+      const { room } = state;
+      const trackInfo = {
+        track: {
+          id: null,
+          kind: null,
+        },
+      };
+
+      const stream = {
+        id: null,
+      };
+
+      trackInfo.track.id = clonedMediaInfo.trackId;
+      trackInfo.track.kind = (clonedMediaInfo.mediaType === MEDIA_TYPE.AUDIO || clonedMediaInfo.mediaType === MEDIA_TYPE.AUDIO_MIC) ? TRACK_KIND.AUDIO : TRACK_KIND.VIDEO;
+      stream.id = clonedMediaInfo.streamId;
+
+      trackInfo.track.target = stream;
+
+      if (!(trackInfo.track.id || trackInfo.track.kind || stream.id)) {
+        logger.log.DEBUG([peerId, TAGS.MEDIA_STREAM, null, `${MESSAGES.BROWSER_AGENT.REACT_NATIVE.ERRORS.DROPPING_ONREMOVETRACK}`], trackInfo);
+        return;
+      }
+
+      callbacks.onremovetrack(peerId, room, clonedMediaInfo.mediaType === MEDIA_TYPE.VIDEO_SCREEN, trackInfo);
+    }
+  };
+
   const helpers$5 = {
     retrieveTransceiverMid,
     retrieveMediaState,
@@ -14621,6 +14686,7 @@ const reactNativeWebrtc = {
     retrieveFormattedMediaInfo,
     resetPeerMedia,
     populatePeerMediaInfo,
+    processOnRemoveTrack,
   };
 
   class PeerMedia {
@@ -14713,6 +14779,8 @@ const reactNativeWebrtc = {
 
       Skylink.setSkylinkState(updatedState, room.id);
 
+      helpers$5.processOnRemoveTrack(updatedState, peerId, clonedMediaInfo);
+
       dispatchEvent(mediaInfoDeleted({
         mediaInfo: clonedMediaInfo,
       }));
@@ -14733,6 +14801,7 @@ const reactNativeWebrtc = {
 
     /**
      * Method that updates the transceiver mid value of local media info after set local description.
+     * // TODO: remove as it is no longer called
      * @param room
      * @param peerId
      * @private
@@ -15081,7 +15150,7 @@ const reactNativeWebrtc = {
 
   const isSenderTrackAndTrackMatched = (senderTrack, tracks) => {
     for (let x = 0; x < tracks.length; x += 1) {
-      if (senderTrack === tracks[x]) {
+      if (senderTrack.id === tracks[x].id) {
         return true;
       }
     }
@@ -15111,14 +15180,11 @@ const reactNativeWebrtc = {
     const tracks = stream.getTracks();
     for (let track = 0; track < tracks.length; track += 1) {
       const sender = peerConnection.addTrack(tracks[track], stream);
-      if (!updatedState.currentRTCRTPSenders[peerId]) {
-        updatedState.currentRTCRTPSenders[peerId] = [];
+
+      if (sender) {
+        helpers$2.processNewSender(updatedState, peerId, sender);
       }
-
-      updatedState.currentRTCRTPSenders[peerId].push(sender);
     }
-
-    Skylink.setSkylinkState(updatedState, updatedState.room.id);
   };
 
   const addUserMediaStreams = (state, peerId, userMediaStreams, peerConnection) => {
