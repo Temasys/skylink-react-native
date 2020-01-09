@@ -99,23 +99,23 @@ export default class App extends Component {
           return;
         }
         const url = response.detail.stream.toURL();
-        self.addUrl(url, response.detail.peerId);
+        self.addUrl(url, response.detail);
       });
 
       skylinkEventManager.addEventListener(events.PEER_LEFT, response => {
         if (self.state.localStreamURL) {
           let updatedStreamlist = self.state.streamList
-          .map(item => {
-            return item.peerID;
-          })
-          .indexOf(response.detail.peerID);
+            .map(item => {
+              return item.peerID;
+            })
+            .indexOf(response.detail.peerId);
           console.log(
-              "PEER LEFT:",
-              response.detail.peerId,
-              response.detail.peerInfo,
-              response.detail.isSelf
+            "PEER LEFT:",
+            response.detail.peerId,
+            response.detail.peerInfo,
+            response.detail.isSelf
           );
-          self.state.streamList.splice(updatedStreamlist, 1);
+          self.state.streamList.splice(updatedStreamlist, 2);
           self.setState({ streamList: self.state.streamList });
         }
       });
@@ -131,10 +131,10 @@ export default class App extends Component {
 
       skylinkEventManager.addEventListener(events.PEER_UPDATED, response => {
         console.log(
-            "PEER UPDATED :",
-            response.detail.peerId,
-            response.detail.peerInfo,
-            response.detail.isSelf
+          "PEER UPDATED :",
+          response.detail.peerId,
+          response.detail.peerInfo,
+          response.detail.isSelf
         );
       });
 
@@ -163,12 +163,14 @@ export default class App extends Component {
     this.setState({ messageList: this.state.messageList });
   }
 
-  addUrl(newStream, peerID) {
+  addUrl(newStream, data) {
     const streamList = this.state.streamList;
     streamList.unshift({
       streamUrl: newStream,
       id: this.nextUrlId,
-      peerID: peerID
+      peerID: data.peerId,
+      audio: data.isAudio,
+      video: data.isVideo
     });
     this.nextUrlId++;
     this.setState({ streamList: streamList });
@@ -208,17 +210,27 @@ export default class App extends Component {
                       onPress={this.toggleView}
                     />
                   </TouchableOpacity>
-                ) && (
-                    <TouchableOpacity>
-                      <Icon
-                          style={styles.navItem}
-                          name={this.state.localStreamURL ? "stop-circle" : "play-circle"}
-                          size={22}
-                          color={"white"}
-                          onPress={this.state.localStreamURL ? this.stopStream : this.sendStream}
-                      />
-                    </TouchableOpacity>
-                )}
+                )
+                // ) && (
+                //   <TouchableOpacity>
+                //     <Icon
+                //       style={styles.navItem}
+                //       name={
+                //         this.state.localStreamURL
+                //           ? "stop-circle"
+                //           : "play-circle"
+                //       }
+                //       size={22}
+                //       color={"white"}
+                //       onPress={
+                //         this.state.localStreamURL
+                //           ? this.stopStream
+                //           : this.sendStream
+                //       }
+                //     />
+                //   </TouchableOpacity>
+                // )
+                }
                 {this.state.isRoomJoined && (
                   <TouchableOpacity
                     onPress={
@@ -257,7 +269,11 @@ export default class App extends Component {
                   return (
                     <window.RTCView
                       streamURL={stream.streamUrl}
-                      style={styles.rtcViewRemote}
+                      style={
+                        stream.audio === true
+                          ? styles.hide
+                          : styles.rtcViewRemote
+                      }
                       key={stream.id}
                       id={stream.id}
                     />
@@ -367,7 +383,7 @@ export default class App extends Component {
 
   sendStream = () => {
     console.log("sendStream toggled");
-    skylink.sendStream(config.defaultRoom, {audio: true, video: true});
+    skylink.sendStream(config.defaultRoom, { audio: true, video: true });
   };
 
   toggleView = () => {
@@ -416,8 +432,7 @@ export default class App extends Component {
     this.setState({ localStreamURL: null });
     this.setState({ isChatOpen: false });
     this.setState({ isRoomJoined: false });
-    skylink.leaveRoom(config.defaultRoom)
-    .then((result) => {
+    skylink.leaveRoom(config.defaultRoom).then(result => {
       console.log("PEER LEFT ROOM :", result);
     });
   };
@@ -452,6 +467,9 @@ export default class App extends Component {
 }
 
 const styles = StyleSheet.create({
+  hide: {
+    display: "none"
+  },
   container: {
     flex: 1,
     backgroundColor: "#F5FCFF"
