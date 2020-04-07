@@ -1,0 +1,30 @@
+{
+  "name": "react-native-sdk-2.x",
+  "version": "2.0.0",
+  "description": "React Native 2.x",
+  "main": "index.js",
+  "scripts": {
+    "build": "./node_modules/rollup/dist/bin/rollup --config configs/rollup.config.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@bitbucket.org/dinawee/react-native-sdk-2.x.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "homepage": "https://bitbucket.org/dinawee/react-native-sdk-2.x#readme",
+  "devDependencies": {
+    "rollup": "^1.27.5",
+    "rollup-plugin-commonjs": "^9.2.0",
+    "rollup-plugin-delete": "^1.1.0",
+    "rollup-plugin-external-globals": "^0.2.1",
+    "rollup-plugin-local-resolve": "^1.0.7",
+    "rollup-plugin-node-resolve": "^4.0.0",
+    "rollup-plugin-serve": "^1.0.1"
+  },
+  "dependencies": {
+    "socket.io-client": "^2.1.0",
+    "temasys-react-native-webrtc": "github:Temasys/temasys-react-native-webrtc-module#master"
+  }
+}
