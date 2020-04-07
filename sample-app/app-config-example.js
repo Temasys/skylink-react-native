@@ -4,6 +4,7 @@ import CryptoJS from 'crypto-js';
 
 const appConfig = {
   appKey: 'XXX-XXX-XXX-XXX-XXX', // Obtained from Temasys Developers Console
+  defaultRoom: 'temasys',
 };
 
 const secret = "XXXXXXX"; // 'xxxxx' Use App Key secret
