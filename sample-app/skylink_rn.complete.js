@@ -1,4 +1,4 @@
-/* SkylinkJS-React-Native v2.0.0 Tue Apr 07 2020 20:03:47 GMT+0800 (Singapore Standard Time) */
+/* SkylinkJS-React-Native v2.0.0 Tue Apr 07 2020 21:33:27 GMT+0800 (Singapore Standard Time) */
     
 import io from 'socket.io-client';
 import  AdapterJS from 'adapterjs_rn';
@@ -31,7 +31,7 @@ const temasysReactNativeWebrtc = {
   io = io && io.hasOwnProperty('default') ? io['default'] : io;
   CryptoJS = CryptoJS && CryptoJS.hasOwnProperty('default') ? CryptoJS['default'] : CryptoJS;
 
-  /* AdapterJS-React-Native Tue Apr 07 2020 20:03:47 GMT+0800 (Singapore Standard Time) */
+  /* AdapterJS-React-Native Tue Apr 07 2020 21:33:27 GMT+0800 (Singapore Standard Time) */
 
   // AdapterJS_RN will be bundled with Skylink and replace all AdapterJS references
   const AdapterJS_RN = {
@@ -2735,6 +2735,7 @@ const temasysReactNativeWebrtc = {
     CHROME: 'chrome',
     FIREFOX: 'firefox',
     SAFARI: 'safari',
+    REACT_NATIVE: 'react-native',
   };
 
   /**
@@ -3290,6 +3291,13 @@ const temasysReactNativeWebrtc = {
       EVENT_UNREGISTER_ERROR: 'Error unregistering event',
       LOGS_NOT_STORED: 'Store logs feature is not enabled. Enable it via SkylinkLogger.setLevel(logLevel, storeLogs)',
       LOGS_CLEARED: 'Stored logs cleared',
+    },
+    BROWSER_AGENT: {
+      REACT_NATIVE: {
+        ERRORS: {
+          DROPPING_ONREMOVETRACK: 'Dropping onremovetrack as trackInfo is malformed',
+        },
+      },
     },
   };
 
@@ -4004,6 +4012,7 @@ const temasysReactNativeWebrtc = {
 
   /* eslint-disable prefer-template */
 
+  // alternative to munging is to implement RTCRtpSender.setParameters()
   const setSDPBitrate = (targetMid, sessionDescription, roomKey) => {
     const state = Skylink.getSkylinkState(roomKey);
     const sdpLines = sessionDescription.sdp.split('\r\n');
@@ -5488,7 +5497,7 @@ const temasysReactNativeWebrtc = {
       throw Error(MESSAGES.ROOM.ERRORS.NOT_IN_ROOM);
     }
 
-    if (Array.isArray(targetPeerId)) {
+    if (Array.isArray(targetPeerId) && !isEmptyArray(targetPeerId)) {
       listOfPeers = targetPeerId;
       isPrivate = true;
     } else if (targetPeerId && isAString(targetPeerId)) {
@@ -7153,11 +7162,13 @@ const temasysReactNativeWebrtc = {
 
     handleNegotationStats.send(room.id, HANDLE_NEGOTIATION_STATS[msgType].set, targetMid, description, isRemote);
 
-    dispatchEvent(handshakeProgress({
-      state: HANDSHAKE_PROGRESS$1[msgType],
-      peerId: isRemote ? targetMid : state.user.sid,
-      room,
-    }));
+    if (isRemote) { // handshake progress is triggered on the local end after sdp it is created
+      dispatchEvent(handshakeProgress({
+        state: HANDSHAKE_PROGRESS$1[msgType],
+        peerId: targetMid,
+        room,
+      }));
+    }
 
     if (isRemote) {
       if (description.type === 'offer') {
@@ -7168,7 +7179,6 @@ const temasysReactNativeWebrtc = {
       IceConnection.addIceCandidateFromQueue(targetMid, room);
     } else {
       bufferedLocalOffer[targetMid] = null;
-
       if (description.type === 'offer') {
         peerConnection.setOffer = 'local';
       } else {
@@ -7192,6 +7202,27 @@ const temasysReactNativeWebrtc = {
       error,
       room,
     }));
+  };
+
+  const mungeSDP = (targetMid, sessionDescription, roomKey) => {
+    const mungedSessionDescription = sessionDescription;
+    // modifying the remote description received
+    // TODO: Below SDP methods needs to be implemented in the SessionDescription Class.
+    // sessionDescriptionToSet.sdp = SessionDescription.removeSDPFilteredCandidates(targetMid, sessionDescriptionToSet, message.rid);
+    // sessionDescriptionToSet.sdp = SessionDescription.setSDPCodec(targetMid, sessionDescriptionToSet, message.rid);
+    mungedSessionDescription.sdp = SessionDescription.setSDPBitrate(targetMid, mungedSessionDescription, roomKey);
+    // sessionDescriptionToSet.sdp = SessionDescription.setSDPCodecParams(targetMid, sessionDescriptionToSet, message.rid);
+    // sessionDescriptionToSet.sdp = SessionDescription.removeSDPCodecs(targetMid, sessionDescriptionToSet, message.rid);
+    // sessionDescriptionToSet.sdp = SessionDescription.removeSDPREMBPackets(targetMid, sessionDescriptionToSet, message.rid);
+    // sessionDescriptionToSet.sdp = SessionDescription.handleSDPConnectionSettings(targetMid, sessionDescriptionToSet, message.rid, 'remote');
+    // sessionDescriptionToSet.sdp = SessionDescription.removeSDPUnknownAptRtx(targetMid, sessionDescriptionToSet, message.rid);
+
+    // if (AdapterJS.webrtcDetectedBrowser === 'firefox') {
+    //   SessionDescription.setOriginalDTLSRole(state, sessionDescriptionToSet, true);
+    // }
+
+    // logger.log.INFO([targetMid, 'RTCSessionDescription', type, `Updated remote ${type} ->`], sessionDescriptionToSet.sdp);
+    return mungedSessionDescription;
   };
 
   const setLocalDescription = (room, targetMid, localDescription) => {
@@ -7246,8 +7277,8 @@ const temasysReactNativeWebrtc = {
 
     peerConnection.processingRemoteSDP = true;
     handleNegotationStats.send(room.id, STATS_MODULE.HANDLE_NEGOTIATION_STATS[msgType][type], targetMid, remoteDescription, true);
-    logger.log.INFO([targetMid, 'RTCSessionDescription', type, 'Session description object created:'], remoteDescription);
-    return peerConnection.setRemoteDescription(remoteDescription)
+    const mungedSessionDescription = mungeSDP(targetMid, remoteDescription, room.id);
+    return peerConnection.setRemoteDescription(mungedSessionDescription)
       .then(() => peerConnection);
   };
 
@@ -7483,7 +7514,7 @@ const temasysReactNativeWebrtc = {
 
     return new Promise((resolve) => {
       const peerConnection = peerConnections[peerId];
-      const pcSenders = peerConnection.getSenders();
+      const pcSenders = peerConnection.getSenders() ? peerConnection.getSenders() : [];
       const senderGetStatsPromises = [];
       const savedSenders = currentRTCRTPSenders[peerId] || [];
       let isRenegoNeeded = false;
@@ -7499,6 +7530,13 @@ const temasysReactNativeWebrtc = {
           reports.forEach((report) => {
             if (report && report.ssrc) {
               transmittingSenders[report.ssrc] = pcSenders[senderIndex];
+            } else if (report && report.type === 'ssrc' && report.id.indexOf('send') > 1) { // required for retrieving sender information for react
+              // native ios
+              report.values.forEach((value) => {
+                if (value.ssrc) {
+                  transmittingSenders[value.ssrc] = pcSenders[senderIndex];
+                }
+              });
             }
           });
         });
@@ -8922,6 +8960,7 @@ const temasysReactNativeWebrtc = {
         PeerConnection.createDataChannel({
           peerId: targetMid,
           roomState: state,
+          createAsMessagingChannel: true,
         });
         state.peerConnections[targetMid].hasMainChannel = true;
       }
@@ -9015,6 +9054,11 @@ const temasysReactNativeWebrtc = {
     rtcPeerConnection.oniceconnectionstatechange = callbacks$2.oniceconnectionstatechange.bind(rtcPeerConnection, ...callbackExtraParams);
     rtcPeerConnection.onsignalingstatechange = callbacks$2.onsignalingstatechange.bind(rtcPeerConnection, ...callbackExtraParams);
     rtcPeerConnection.onicegatheringstatechange = callbacks$2.onicegatheringstatechange.bind(rtcPeerConnection, ...callbackExtraParams);
+
+    if (AdapterJS.webrtcDetectedBrowser === BROWSER_AGENT.REACT_NATIVE) {
+      rtcPeerConnection.onsenderadded = callbacks$2.onsenderadded.bind(rtcPeerConnection, ...callbackExtraParams);
+      rtcPeerConnection.onremovetrack = callbacks$2.onremovetrack.bind(rtcPeerConnection, targetMid, state.room, false);
+    }
 
     return rtcPeerConnection;
   };
@@ -9616,7 +9660,7 @@ const temasysReactNativeWebrtc = {
     logger.log.DEBUG([peerId, 'RTCDataChannel', channelProp, 'Datachannel buffering data transfer low']);
 
     dispatchEvent(onDataChannelStateChanged({
-      state: DATA_CHANNEL_STATE.BUFFERED_AMOUNT_LOW,
+      state: DATA_CHANNEL_STATE$1.BUFFERED_AMOUNT_LOW,
       room,
       peerId,
       channelName,
@@ -9709,7 +9753,7 @@ const temasysReactNativeWebrtc = {
               createAsMessagingChannel: true,
               roomState: state,
             });
-            handleDataChannelStats.send(STATS_MODULE.HANDLE_DATA_CHANNEL_STATS.reconnecting, peerId, { label: channelName }, 'main');
+            handleDataChannelStats.send(room.id, STATS_MODULE.HANDLE_DATA_CHANNEL_STATS.reconnecting, peerId, { label: channelName }, 'main');
           }
         }, 100);
       }
@@ -10522,12 +10566,21 @@ const temasysReactNativeWebrtc = {
     Skylink.setSkylinkState(updatedState, room.id);
   };
 
+  const processNewSender = (state, targetMid, sender) => {
+    const updatedState = state;
+    if (!updatedState.currentRTCRTPSenders[targetMid]) {
+      updatedState.currentRTCRTPSenders[targetMid] = [];
+    }
+    updatedState.currentRTCRTPSenders[targetMid].push(sender);
+    Skylink.setSkylinkState(updatedState, updatedState.room.id);
+  };
+
   /**
    * @namespace PeerConnectionHelpers
    * @description All helper and utility functions for <code>{@link PeerConnection}</code> class are listed here.
    * @private
    * @memberOf PeerConnection
-   * @type {{createOffer, createAnswer, addPeer, createDataChannel, sendP2PMessage, getPeersInRoom, signalingEndOfCandidates, getDataChannelBuffer, refreshDataChannel, closeDataChannel, refreshConnection, refreshPeerConnection, restartPeerConnection, buildPeerInformations, getConnectionStatus, closePeerConnection, updatePeerInformationsMediaStatus }}
+   * @type {{createOffer, createAnswer, addPeer, createDataChannel, sendP2PMessage, getPeersInRoom, signalingEndOfCandidates, getDataChannelBuffer, refreshDataChannel, closeDataChannel, refreshConnection, refreshPeerConnection, restartPeerConnection, buildPeerInformations, getConnectionStatus, closePeerConnection, updatePeerInformationsMediaStatus, processNewSender  }}
    */
   const helpers$4 = {
     createOffer,
@@ -10547,6 +10600,7 @@ const temasysReactNativeWebrtc = {
     getConnectionStatus,
     closePeerConnection: closePeerConnection$1,
     updatePeerInformationsMediaStatus,
+    processNewSender,
   };
 
   /* eslint-disable no-param-reassign */
@@ -10916,7 +10970,7 @@ const temasysReactNativeWebrtc = {
       PeerConnection.getConnectionStatus(state, targetMid).then(() => {
         handleIceConnectionStats.send(currentRoomState.room.id, peerConnection.iceConnectionState, targetMid);
         statsInterval = setInterval(() => {
-          if (peerConnection.signalingState === PEER_CONNECTION_STATE.CLOSED) {
+          if (peerConnection.signalingState === PEER_CONNECTION_STATE.CLOSED || peerConnection.iceConnectionState === PEER_CONNECTION_STATE.CLOSED) {
             clearInterval(statsInterval);
           } else {
             new HandleBandwidthStats().send(state.room.id, peerConnection, targetMid);
@@ -11075,14 +11129,14 @@ const temasysReactNativeWebrtc = {
     Skylink.setSkylinkState(updatedState, updatedState.room.id);
   };
 
-  const dispatchStreamEndedEvent = (state, peerId, isScreensharing, rtcTrackEvent) => {
+  const dispatchStreamEndedEvent = (state, peerId, isScreensharing, rtcTrackEvent, stream) => {
     dispatchEvent(streamEnded({
       room: state.room,
       peerId,
       peerInfo: PeerData.getPeerInfo(peerId, state.room),
       isSelf: false,
       isScreensharing,
-      streamId: rtcTrackEvent.track.id,
+      streamId: stream.id,
       isVideo: rtcTrackEvent.track.kind === TRACK_KIND.VIDEO,
       isAudio: rtcTrackEvent.track.kind === TRACK_KIND.AUDIO,
     }));
@@ -11116,10 +11170,11 @@ const temasysReactNativeWebrtc = {
    * @memberOf PeerConnection.PeerConnectionHelpers.CreatePeerConnectionCallbacks
    */
   const onremovetrack = (peerId, room, isScreensharing, rtcTrackEvent) => {
+    const { AdapterJS } = window;
     const state = getStateByKey(room.id);
     const { peerInformations } = state;
     const { MEDIA_STREAM, PEER_INFORMATIONS } = MESSAGES;
-    const stream = rtcTrackEvent.target;
+    const stream = AdapterJS.webrtcDetectedBrowser === BROWSER_AGENT.REACT_NATIVE ? rtcTrackEvent.stream : rtcTrackEvent.target;
 
 
     logger.log.INFO([peerId, TAGS.MEDIA_STREAM, null, MEDIA_STREAM.REMOTE_TRACK_REMOVED], {
@@ -11138,7 +11193,7 @@ const temasysReactNativeWebrtc = {
     }
 
     updateMediaStatus(state, peerId, stream.id);
-    dispatchStreamEndedEvent(state, peerId, isScreensharing, rtcTrackEvent);
+    dispatchStreamEndedEvent(state, peerId, isScreensharing, rtcTrackEvent, stream);
 
     if (isScreensharing) {
       // Dispatch to ensure that the client has a way of retrieving the camera stream. Camera stream was not added to pc and therefore ontrack will not trigger on remote.
@@ -11149,8 +11204,22 @@ const temasysReactNativeWebrtc = {
   };
 
   /**
+   * React Native only callback to retrieve senders from the peer connection as the sender object is not returned from peerConnection.addTrack.
+   * @param peerConnection
+   * @param targetMid
+   * @param currentRoomState
+   * @param event
+   * @memberOf PeerConnection.PeerConnectionHelpers.CreatePeerConnectionCallbacks
+   */
+  const onsenderadded = (peerConnection, targetMid, currentRoomState, event) => {
+    const updatedState = Skylink.getSkylinkState(currentRoomState.room.id);
+    const { sender } = event;
+    helpers$4.processNewSender(updatedState, targetMid, sender);
+  };
+
+  /**
    * @description Callbacks for createPeerConnection method
-   * @type {{ondatachannel, onicecandidate, oniceconnectionstatechange, onicegatheringstatechange, onsignalingstatechange, ontrack, onremovetrack}}
+   * @type {{ondatachannel, onicecandidate, oniceconnectionstatechange, onicegatheringstatechange, onsignalingstatechange, ontrack, onremovetrack, onsenderadded}}
    * @memberOf PeerConnection.PeerConnectionHelpers
    * @namespace CreatePeerConnectionCallbacks
    * @private
@@ -11163,6 +11232,7 @@ const temasysReactNativeWebrtc = {
     onicegatheringstatechange,
     onsignalingstatechange,
     onremovetrack,
+    onsenderadded,
   };
 
   /**
@@ -12580,7 +12650,9 @@ const temasysReactNativeWebrtc = {
      */
     answer(...args) {
       return this.messageBuilder.getAnswerMessage(...args).then((answer) => {
+        const state = args[0];
         this.sendMessage(answer);
+        this.dispatchHandshakeProgress(state, 'ANSWER');
         return answer;
       });
     }
@@ -12618,6 +12690,7 @@ const temasysReactNativeWebrtc = {
 
       this.messageBuilder.getOfferMessage(...args).then((offer) => {
         this.sendMessage(offer);
+        this.dispatchHandshakeProgress(state, 'OFFER');
       });
     }
 
@@ -12853,6 +12926,37 @@ const temasysReactNativeWebrtc = {
     return peerMedia;
   };
 
+  const processOnRemoveTrack = (state, peerId, clonedMediaInfo) => {
+    // This method is required because react native android does not have a way for the remote to register onremovetrack event
+    // onremovetrack needs to be caught in the renegotiation when the remote calls stopStreams and sends an offer
+    // the removed track/stream will be set to unavailable
+    // Although react native ios has didRemoveReceiver callback, and onremovetrack can be artificially attached to the peerConnection to process
+    // a stopped stream, the type of stream is not identifiable i.e is screenshare or not.
+    // Therefore react native ios and android will implement the same workaround for now.
+    const { AdapterJS } = window;
+    if (AdapterJS.webrtcDetectedBrowser === BROWSER_AGENT.REACT_NATIVE && clonedMediaInfo) {
+      const { room } = state;
+      const trackInfo = {
+        track: {
+          id: null,
+          kind: null,
+        },
+      };
+      const stream = {
+        id: null,
+      };
+      trackInfo.track.id = clonedMediaInfo.trackId;
+      trackInfo.track.kind = (clonedMediaInfo.mediaType === MEDIA_TYPE.AUDIO || clonedMediaInfo.mediaType === MEDIA_TYPE.AUDIO_MIC) ? TRACK_KIND.AUDIO : TRACK_KIND.VIDEO;
+      stream.id = clonedMediaInfo.streamId;
+      trackInfo.stream = stream;
+      if (!(trackInfo.track.id || trackInfo.track.kind || stream.id)) {
+        logger.log.DEBUG([peerId, TAGS.MEDIA_STREAM, null, `${MESSAGES.BROWSER_AGENT.REACT_NATIVE.ERRORS.DROPPING_ONREMOVETRACK}`], trackInfo);
+        return;
+      }
+      callbacks$2.onremovetrack(peerId, room, clonedMediaInfo.mediaType === MEDIA_TYPE.VIDEO_SCREEN, trackInfo);
+    }
+  };
+
   const helpers$5 = {
     retrieveTransceiverMid,
     retrieveMediaState,
@@ -12867,6 +12971,7 @@ const temasysReactNativeWebrtc = {
     retrieveFormattedMediaInfo,
     resetPeerMedia,
     populatePeerMediaInfo,
+    processOnRemoveTrack,
   };
 
   class PeerMedia {
@@ -12959,6 +13064,8 @@ const temasysReactNativeWebrtc = {
 
       Skylink.setSkylinkState(updatedState, room.id);
 
+      helpers$5.processOnRemoveTrack(updatedState, peerId, clonedMediaInfo);
+
       dispatchEvent(mediaInfoDeleted({
         mediaInfo: clonedMediaInfo,
       }));
@@ -12979,6 +13086,7 @@ const temasysReactNativeWebrtc = {
 
     /**
      * Method that updates the transceiver mid value of local media info after set local description.
+     * // TODO: remove as it is no longer called
      * @param room
      * @param peerId
      * @private
@@ -13327,7 +13435,7 @@ const temasysReactNativeWebrtc = {
 
   const isSenderTrackAndTrackMatched = (senderTrack, tracks) => {
     for (let x = 0; x < tracks.length; x += 1) {
-      if (senderTrack === tracks[x]) {
+      if (senderTrack.id === tracks[x].id) {
         return true;
       }
     }
@@ -13336,7 +13444,7 @@ const temasysReactNativeWebrtc = {
   };
 
   const isStreamOnPC = (peerConnection, stream) => {
-    const transceivers = peerConnection.getTransceivers();
+    const transceivers = peerConnection.getTransceivers ? peerConnection.getTransceivers() : [];
     const tracks = stream.getTracks();
 
     if (isEmptyArray(transceivers)) {
@@ -13357,11 +13465,9 @@ const temasysReactNativeWebrtc = {
     const tracks = stream.getTracks();
     for (let track = 0; track < tracks.length; track += 1) {
       const sender = peerConnection.addTrack(tracks[track], stream);
-      if (!updatedState.currentRTCRTPSenders[peerId]) {
-        updatedState.currentRTCRTPSenders[peerId] = [];
+      if (sender) {
+        helpers$4.processNewSender(updatedState, peerId, sender);
       }
-
-      updatedState.currentRTCRTPSenders[peerId].push(sender);
     }
 
     Skylink.setSkylinkState(updatedState, updatedState.room.id);
@@ -16589,6 +16695,12 @@ const temasysReactNativeWebrtc = {
     }
 
     getStatsSuccess(promiseResolve, promiseReject, stats) {
+      const { AdapterJS } = window;
+      if (!stats && AdapterJS.webrtcDetectedBrowser === BROWSER_AGENT.REACT_NATIVE) {
+        // get stats in react native will resolve with 'null'
+        promiseResolve(this.output);
+        return;
+      }
       const { peerBandwidth, peerStats, room } = this.roomState;
       // TODO: Need to do full implementation of success function
       if (typeof stats.forEach === 'function') {
