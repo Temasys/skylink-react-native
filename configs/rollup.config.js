@@ -4,6 +4,7 @@ import resolve from 'rollup-plugin-node-resolve';
 import del from 'rollup-plugin-delete';
 import pkg from '../package.json';
 import paths from './paths';
+import skylinkPackageJson from '../node_modules/skylinkjs/package.json';
 
 const IMPORT_DECLARATIONS = `
 import io from 'socket.io-client';
@@ -32,8 +33,8 @@ const temasysReactNativeWebrtc = {
 `;
 const CLONE_DEST_PATH = `${paths.skylinkNodeModules}/clone/clone.js`;
 const DIST_PATH = paths.appDist;
-const RN_APP_PATH = paths.skylink_react_native;
 const SAMPLE_APP_PATH = paths.sampleApp;
+
 
 const FORMATS = {
   esm: 'esm',
@@ -54,7 +55,7 @@ const BUILD_JS = {
     minFileName: 'skylink_rn.complete.min.js',
     globals: { 'socket.io-client' : 'io', 'adapterjs_rn': 'AdapterJS_RN', 'skylinkjs': 'Skylink', 'adapterjs': 'AdapterJS', 'temasys-react-native-webrtc': 'temasysReactNativeWebrtc', 'crypto-js': 'CryptoJS' },
     external: ['socket.io-client', 'adapterjs', 'temasys-react-native-webrtc', 'crypto-js'],
-    banner: `/* SkylinkJS-React-Native v${pkg.version} ${new Date().toString()} */
+    banner: `/* SkylinkJS-React-Native v${pkg.version} @ SkylinkJS v${skylinkPackageJson.version} ${new Date().toString()}*/
     ${IMPORT_DECLARATIONS}`,
   },
 };
@@ -80,6 +81,13 @@ const ADAPTERJS_RN = {
       banner: BUILD_JS.adapterjsRN.banner,
     },
   ],
+  onwarn: (warning, warn) => {
+    // skip certain warnings
+    if (warning.code === 'CIRCULAR_DEPENDENCY') return;
+    if (warning.code === 'THIS_IS_UNDEFINED') return;
+    // Use default for everything else
+    warn(warning);
+  },
   plugins: [
     localResolve(),
     del({
@@ -100,7 +108,7 @@ const SKYLINK_RN = {
       globals: BUILD_JS.skylinkRN.globals,
       banner: BUILD_JS.skylinkRN.banner,
     }, {
-      file: `${SAMPLE_APP_PATH}/${BUILD_JS.skylinkRN.fileName}`,
+      file: `${SAMPLE_APP_PATH}/${BUILD_JS.skylinkRN.fileName}`, // place a copy in /sample-app folder as react cannot reference the dist folder which is outside of the project root folder
       format: BUILD_JS.skylinkRN.format,
       exports: 'named',
       globals: BUILD_JS.skylinkRN.globals,
@@ -113,6 +121,12 @@ const SKYLINK_RN = {
       banner: BUILD_JS.skylinkRN.banner,
     },
   ],
+  onwarn: (warning, warn) => {
+    // skip certain warnings
+    if (warning.code === 'CIRCULAR_DEPENDENCY') return;
+    // Use default for everything else
+    warn(warning);
+  },
   plugins: [
     commonJS({
       namedExports: {
