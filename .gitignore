@@ -55,12 +55,6 @@ dwsync.xml
 .svn
 .CVS
 .idea
-bamboo
-demo/**/config.js
-coverage
 .nyc_output
-docs
 .history/
 .vscode/launch.json
-package-lock.json
-app-config.js
