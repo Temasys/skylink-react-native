@@ -1,6 +1,11 @@
 # Building the sample app
 
+### Pre-requisites
+- [set up the Android or iOS development environment](https://reactnative.dev/docs/environment-setup)
+- `react-native-cli` is installed globally
+
 ### Android Installation
+- check you are in `react-native-sdk-2.x/sample-app` directory
 - `npm install`
 - in `/sample-app/android` create a file `local.properties` and add the line `sdk.dir = /Users/USERNAME/Library/Android/sdk`
 - in `/sample-app` create a file `app-config.js` and copy the contents of `app-config-example.js` replacing the placeholder values with your own key and secret*
@@ -9,6 +14,7 @@
 - grant permission for USB installation when prompted
 
 ### iOS Installation
+- check you are in `react-native-sdk-2.x/sample-app` directory
 - `npm install`
 - navigate to `/sample-app/ios` and open `ReactNativeWebRTC.xcodeproj` in Xcode
 - in `/sample-app` create a file `app-config.js` and copy the contents of `app-config-example.js` replacing the placeholder values with your own key and secret*
