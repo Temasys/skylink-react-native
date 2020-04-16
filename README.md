@@ -12,7 +12,7 @@ You'll need a Temasys Account and an App key to use this. [Register here to get 
 - run `npm run build`
 - in `path/to/react-native-sdk-2.x/sample-app` the `skylink_rn.complete.js` will be replaced or added
 - this is the Skylink React Native SDK that is imported in `App.js`
-- refer to [/sample-app/README.md](https://bitbucket.org/dinawee/react-native-sdk-2.x/src/master/sample-app/README.md) for steps on setting up the Android and iOS sample apps
+- refer to [sample-app/README.md](/sample-app/README.md) for steps on setting up the Android and iOS sample apps
 
 #### Need help or want something changed?
 You can raise tickets on [our support portal](http://support.temasys.io) or on [our Github Page](https://console.temasys.io/support).
