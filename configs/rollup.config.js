@@ -53,8 +53,8 @@ const BUILD_JS = {
     format: FORMATS.iife,
     fileName: 'skylink_rn.complete.js',
     minFileName: 'skylink_rn.complete.min.js',
-    globals: { 'socket.io-client' : 'io', 'adapterjs_rn': 'AdapterJS_RN', 'skylinkjs': 'Skylink', 'adapterjs': 'AdapterJS', 'temasys-react-native-webrtc': 'temasysReactNativeWebrtc', 'crypto-js': 'CryptoJS' },
-    external: ['socket.io-client', 'adapterjs', 'temasys-react-native-webrtc', 'crypto-js'],
+    globals: { 'socket.io-client' : 'io', 'adapterjs_rn': 'AdapterJS_RN', 'skylinkjs': 'Skylink', 'webrtc-adapter': 'AdapterJS', 'temasys-react-native-webrtc': 'temasysReactNativeWebrtc', 'crypto-js': 'CryptoJS' },
+    external: ['socket.io-client', 'webrtc-adapter', 'temasys-react-native-webrtc', 'crypto-js'],
     banner: `/* SkylinkJS-React-Native v${pkg.version} @ SkylinkJS v${skylinkPackageJson.version} ${new Date().toString()}*/
     ${IMPORT_DECLARATIONS}`,
   },

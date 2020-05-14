@@ -9,14 +9,7 @@ import {
 } from "temasys-react-native-webrtc";
 
 // AdapterJS_RN will be bundled with Skylink and replace all AdapterJS references
-const AdapterJS_RN = {
-  WebRTCPlugin: {
-    plugin: null,
-  },
-  webrtcDetectedBrowser: "react-native",
-  webrtcDetectedVersion: "2.x",
-  webrtcDetectedType: "react-native",
-};
+const AdapterJS_RN = {};
 
 AdapterJS_RN.windowClone = Object.create(global.window);
 
@@ -69,6 +62,7 @@ AdapterJS_RN.deleteWindowAndLocation = () => {
 AdapterJS_RN.initOverride = () => {
   AdapterJS_RN.deleteWindowAndLocation();
   global.window = AdapterJS_RN.window;
+  global.document = {};
 };
 
 AdapterJS_RN.initOverride();
