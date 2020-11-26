@@ -30,6 +30,7 @@ const temasysReactNativeWebrtc = {
   mediaDevices,
   permissions
 };
+const __sdkVersion__ = '${pkg.version}';
 `;
 const CLONE_DEST_PATH = `${paths.skylinkNodeModules}/clone/clone.js`;
 const DIST_PATH = paths.appDist;
