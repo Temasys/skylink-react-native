@@ -22,6 +22,6 @@ You can raise tickets on [our support portal](http://support.temasys.io) or on [
 - [Temasys Console  - Get your App key](https://console.temasys.io)
 
     
-Lateset version: `Skylink-React-Native 2.0.0`
+Latest version: `Skylink-React-Native 2.1.0`
     
-Built on: `SkylinkJS 2.1.0`
+Built on: `SkylinkJS 2.2.1`
