@@ -97,12 +97,17 @@ export default class App extends Component {
           response => {
             this.logToConsole('MEDIA_ACCESS_SUCCESS', response, true);
             const url = response.detail.stream.toURL();
-            const tempStream = [];
-            tempStream.push({ localStream: url, audio: response.detail.stream._tracks[0].kind === "audio",video: response.detail.stream._tracks[0].kind === "video" });
-            this.setState({localStreamList : tempStream});
+
+            if (response.detail.stream._tracks[0].kind === "video") {
+              const tempLocalStreamList= self.state.localStreamList || [];
+              tempLocalStreamList.push({ localStream: url, audio: response.detail.stream._tracks[0].kind === "audio",video: response.detail.stream._tracks[0].kind === "video" });
+              this.setState({localStreamList : tempLocalStreamList});
+            }
+
             self.setState({
               localStreamURL: url
             });
+            console.log("current state", self.state);
           }
       );
 
@@ -203,6 +208,18 @@ export default class App extends Component {
 
       skylinkEventManager.addEventListener(events.STREAM_ENDED, response => {
         this.logToConsole('STREAM_ENDED', response, true);
+        if (response.detail.isSelf) {
+          const localStreamList = this.state.localStreamList;
+          console.log(response.detail.streamId);
+          console.log(this.state.localStreamList);
+          localStreamList.forEach((stream, i) => {
+            if (stream.localStream === response.detail.streamId) {
+              localStreamList.splice(i, 1);
+            }
+          });
+          this.setState({ localStreamList: localStreamList });
+        }
+
         self.removeUrl(response.detail.streamId, response.detail.isScreensharing);
       });
 
@@ -273,7 +290,6 @@ export default class App extends Component {
         audio: data.isAudio,
         video: data.isVideo
       });
-      console.log(streamList);
       this.setState({ streamList: streamList });
     }
   }
@@ -669,17 +685,20 @@ export default class App extends Component {
     };
 
     setTimeout(()=> {
-      window.getUserMedia(options)
-      .then(stream => {
-        this.logToConsole('sendStream', 'toggle facing camera');
+      skylink.getUserMedia(options)
+      .then(streams => {
+        this.logToConsole('send stream', 'toggle facing camera');
+        this.logToConsole('getUserMedia streams', streams);
         const self = this;
-        skylink.sendStream(config.defaultRoom, stream).then(function(success) {
-          const url = stream.toURL();
+        skylink.sendStream(config.defaultRoom, streams).then(function(success) {
+          const url = success[1][1].toURL();
           self.setState({
             localStreamURL: url
           });
-          if (stream === success) {
-            self.logToConsole('sendStream', 'Same MediaStream has been sent');
+          if (success[1][1] && success[1][1]._tracks[0].kind === "video") {
+            const tempLocalStreamList= self.state.localStreamList || [];
+            tempLocalStreamList.push({ localStream: success[1][1].toURL(), audio: success[1][1]._tracks[0].kind === "audio",video: success[1][1]._tracks[0].kind === "video" });
+            self.setState({localStreamList : tempLocalStreamList});
           }
         })
         .catch((err) => {
