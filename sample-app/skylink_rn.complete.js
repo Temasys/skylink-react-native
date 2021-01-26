@@ -1,4 +1,4 @@
-/* SkylinkJS-React-Native v2.0.0 @ SkylinkJS v2.1.5 Thu Nov 26 2020 11:40:21 GMT+0800 (Singapore Standard Time)*/
+/* SkylinkJS-React-Native v2.0.0 @ SkylinkJS v2.2.1 Tue Jan 26 2021 17:15:39 GMT+0800 (Singapore Standard Time)*/
     
 import io from 'socket.io-client';
 import  AdapterJS from 'adapterjs_rn';
@@ -32,7 +32,7 @@ const __sdkVersion__ = '2.0.0';
   AdapterJS = AdapterJS && AdapterJS.hasOwnProperty('default') ? AdapterJS['default'] : AdapterJS;
   CryptoJS = CryptoJS && CryptoJS.hasOwnProperty('default') ? CryptoJS['default'] : CryptoJS;
 
-  /* AdapterJS-React-Native Thu Nov 26 2020 11:40:21 GMT+0800 (Singapore Standard Time) */
+  /* AdapterJS-React-Native Tue Jan 26 2021 17:15:39 GMT+0800 (Singapore Standard Time) */
 
   // AdapterJS_RN will be bundled with Skylink and replace all AdapterJS references
   const AdapterJS_RN = {};
@@ -12146,9 +12146,18 @@ const __sdkVersion__ = '2.0.0';
         case MEDIA_TYPE.VIDEO_SCREEN:
         case MEDIA_TYPE.VIDEO_CAMERA:
         case MEDIA_TYPE.VIDEO_OTHER:
-        case MEDIA_TYPE.VIDEO: videoStateChangeHandler(targetMid, message); break;
+        case MEDIA_TYPE.VIDEO:
+          setTimeout(() => {
+            videoStateChangeHandler(targetMid, message);
+          }, 100); // setTimeout to handle joinRoom with audio/video and muted true. Safari browser may not have processed ontrack before the
+          // mediaInfoEvent is received resulting in the streamId being undefined
+          break;
         case MEDIA_TYPE.AUDIO_MIC:
-        case MEDIA_TYPE.AUDIO: audioStateChangeHandler(targetMid, message); break;
+        case MEDIA_TYPE.AUDIO:
+          setTimeout(() => {
+            audioStateChangeHandler(targetMid, message);
+          }, 100);
+          break;
         default: logger.log.ERROR([targetMid, TAGS.SIG_SERVER, `${MESSAGES.MEDIA_INFO.WARN.INVALID_MEDIA_TYPE} ${mediaType}`], message);
       }
     }
@@ -14365,7 +14374,7 @@ const __sdkVersion__ = '2.0.0';
     }
 
     if (streamId && !peerStreams[user.sid][streamId]) {
-      logger.log.ERROR(MESSAGES.MEDIA_STREAM.ERRORS.INVALID_MUTE_OPTIONS, options);
+      logger.log.ERROR(MESSAGES.MEDIA_STREAM.ERRORS.INVALID_STREAM_ID, streamId);
       return;
     }
 
@@ -14376,7 +14385,7 @@ const __sdkVersion__ = '2.0.0';
       videoMuted: isABoolean(options.videoMuted) ? options.videoMuted : (isANumber(options.videoMuted) ? retrieveMutedSetting(options.videoMuted) : true),
     };
 
-    const streamIdsThatCanBeMuted = Object.keys(peerStreams[user.sid]) || [];
+    const streamIdsThatCanBeMuted = streamId ? [streamId] : (peerStreams[user.sid] && Object.keys(peerStreams[user.sid])) || [];
 
     if (isEmptyArray(streamIdsThatCanBeMuted)) {
       logger.log.ERROR(MESSAGES.MEDIA_STREAM.ERRORS.NO_STREAMS_MUTED, options);
@@ -16818,6 +16827,13 @@ const __sdkVersion__ = '2.0.0';
     async start(streamId = null, options) {
       this.streamId = streamId;
       this.settings = this.isValidOptions(options) ? helpers$7.parseStreamSettings(options) : helpers$7.parseStreamSettings(DEFAULTS.MEDIA_OPTIONS.SCREENSHARE);
+      if (!options || !(options.video && options.video.resolution)) {
+        // defaults for video were set so delete video width and height constraints if not provided in options
+        delete this.settings.getUserMediaSettings.video.width;
+        delete this.settings.settings.video.width;
+        delete this.settings.getUserMediaSettings.video.height;
+        delete this.settings.settings.video.height;
+      }
 
       try {
         this.checkForExistingScreenStreams();
