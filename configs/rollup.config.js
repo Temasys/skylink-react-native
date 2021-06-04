@@ -4,6 +4,7 @@ import resolve from 'rollup-plugin-node-resolve';
 import del from 'rollup-plugin-delete';
 import pkg from '../package.json';
 import paths from './paths';
+import json from '@rollup/plugin-json';
 import skylinkPackageJson from '../node_modules/skylinkjs/package.json';
 
 const IMPORT_DECLARATIONS = `
@@ -30,7 +31,6 @@ const temasysReactNativeWebrtc = {
   mediaDevices,
   permissions
 };
-const __sdkVersion__ = '${pkg.version}';
 `;
 const CLONE_DEST_PATH = `${paths.skylinkNodeModules}/clone/clone.js`;
 const DIST_PATH = paths.appDist;
@@ -90,6 +90,7 @@ const ADAPTERJS_RN = {
     warn(warning);
   },
   plugins: [
+    json({ compact: true }),
     localResolve(),
     del({
       targets: [`dist/adapterjs_rn/${BUILD_JS.adapterjsRN.fileName}`, `dist/adapterjs_rn/${BUILD_JS.adapterjsRN.minFileName}`, `dist/skylinkjs_rn/${BUILD_JS.skylinkRN.fileName}`, `dist/skylinkjs_rn/${BUILD_JS.skylinkRN.minFileName}`],
@@ -129,6 +130,7 @@ const SKYLINK_RN = {
     warn(warning);
   },
   plugins: [
+    json({ compact: true }),
     commonJS({
       namedExports: {
         [CLONE_DEST_PATH]: ['clone'],
