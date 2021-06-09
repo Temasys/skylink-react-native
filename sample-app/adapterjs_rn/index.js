@@ -1,4 +1,4 @@
-/* AdapterJS-React-Native Tue Jan 26 2021 17:15:39 GMT+0800 (Singapore Standard Time) */
+/* AdapterJS-React-Native Fri Jun 04 2021 12:40:27 GMT+0800 (Singapore Standard Time) */
 import { mediaDevices, RTCPeerConnection, RTCIceCandidate, RTCSessionDescription, RTCView, MediaStream, MediaStreamTrack } from 'temasys-react-native-webrtc';
 
 // AdapterJS_RN will be bundled with Skylink and replace all AdapterJS references
